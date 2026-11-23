@@ -1,20 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-@font-face {
-  font-family: 'MyriadPro-Semibold';
-  src: url('/fonts/MyriadPro-Semibold.otf') format('opentype'),
-       local('MyriadPro-Semibold'),
-       local('Myriad Pro Semibold'),
-       local('Myriad Pro');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
+@theme {
+  --font-heading: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
 }
 
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
-  --font-family-sans: "MyriadPro-Semibold", "Myriad Pro", Helvetica, Arial, serif;
+  --font-family-sans: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  --font-family-display: "Outfit", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
 }
 
 /* Enforce daylight light mode strictly across all client devices */
@@ -22,20 +18,25 @@ html {
   color-scheme: light !important;
   background-color: #f8fafc;
   color: #0f172a;
-  font-family: "MyriadPro-Semibold", "Myriad Pro", Helvetica, Arial, serif;
+  font-family: var(--font-family-sans);
 }
 
 body {
   background-color: #f8fafc;
   color: #0f172a;
-  font-family: "MyriadPro-Semibold", "Myriad Pro", Helvetica, Arial, serif !important;
+  font-family: var(--font-family-sans) !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Apply requested font stack universally across all interactive elements and typography */
-*, input, select, textarea, button, h1, h2, h3, h4, h5, h6, p, span, a, label {
-  font-family: "MyriadPro-Semibold", "Myriad Pro", Helvetica, Arial, serif;
+/* Apply requested modern typography universally */
+*, input, select, textarea, button, p, span, a, label {
+  font-family: var(--font-family-sans);
+}
+
+/* Distinct, modern, prestigious typeface for headings */
+h1, h2, h3, h4, h5, h6, .font-heading, .font-display {
+  font-family: var(--font-family-display) !important;
 }
 
 /* Smooth gentle focus */

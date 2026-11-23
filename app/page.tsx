@@ -165,40 +165,25 @@ export default function Home() {
           {/* Subtle translucent tint that preserves the vivid background image while ensuring 100% text contrast */}
           <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-white/20 to-white/35 pointer-events-none" />
 
-          <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-5">
-            {/* National Republic Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50/95 border border-blue-200 text-blue-800 text-xs sm:text-sm font-semibold shadow-xs backdrop-blur-sm">
-              <span className="w-2 h-2 rounded-full bg-blue-600" />
-              <span>
-                {isFr
-                  ? "République Démocratique du Congo • Portail des Services Numériques"
-                  : "Democratic Republic of the Congo • Digital Public Services"}
-              </span>
-            </div>
+          <div className="relative max-w-6xl mx-auto px-4 sm:px-6 text-center space-y-5">
+           
 
-            {/* Clear, larger heading */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-medium text-slate-950 tracking-tight max-w-4xl mx-auto leading-tight drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]">
+            {/* Clear, larger single-line heading */}
+            <h1 className="font-heading text-xl sm:text-2xl md:text-[1.85rem] lg:text-[2.35rem] xl:text-[2.75rem] font-bold text-slate-950 tracking-tight max-w-none mx-auto leading-tight md:leading-snug drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)] whitespace-normal md:whitespace-nowrap">
               {isFr ? (
                 <>
                   L'administration publique simplifiée pour{" "}
-                  <span className="font-semibold text-blue-700">tous les citoyens</span>
+                  <span className="font-bold text-blue-700">tous les citoyens</span>
                 </>
               ) : (
                 <>
                   Simplified public administration for{" "}
-                  <span className="font-semibold text-blue-700">all citizens</span>
+                  <span className="font-bold text-blue-700">all citizens</span>
                 </>
               )}
             </h1>
 
-            {/* Subtitle - Bigger, crisp, perfectly clear and high contrast */}
-            <div className="max-w-3xl mx-auto">
-              <p className="inline-block text-sm sm:text-base md:text-lg text-slate-900 font-medium leading-relaxed bg-white/70 backdrop-blur-xs px-5 py-2.5 rounded-2xl border border-white/60 shadow-xs">
-                {isFr
-                  ? "Délivrance d'actes d'état civil, carte d'identité, passeport, permis de conduire et certificats juridiques sans attente superflue."
-                  : "Issuance of civil status documents, identity cards, passports, driving licenses and legal certificates without unnecessary waiting."}
-              </p>
-            </div>
+      
 
             {/* Clean Hero Search - Bigger, clearer */}
             <div className="max-w-2xl mx-auto pt-2">
@@ -236,26 +221,7 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Fast quick links - High contrast, clearly legible */}
-              <div className="flex flex-wrap items-center justify-center gap-2 pt-3.5 text-xs sm:text-sm">
-                <span className="text-slate-900 font-semibold drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]">
-                  {isFr ? "Fréquents :" : "Frequent:"}
-                </span>
-                {["CNI", "Passeport", "Casier Judiciaire", "Acte de Naissance", "Permis"].map(
-                  (item, i) => (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        setSearchQuery(item);
-                        setActiveTab("services");
-                      }}
-                      className="px-3 py-1 rounded-lg bg-white/95 border border-slate-300 hover:bg-white text-slate-900 font-medium transition-colors cursor-pointer shadow-xs hover:border-blue-400 hover:text-blue-700"
-                    >
-                      {item}
-                    </button>
-                  )
-                )}
-              </div>
+             
             </div>
           </div>
         </section>

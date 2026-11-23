@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Language, ServiceCategory, ServiceItem, CitizenApplication } from "../types";
 import { SERVICES_DATA, CATEGORIES, SAMPLE_APPLICATIONS } from "../data/services";
 import { Navbar } from "../components/layout/Navbar";
@@ -41,6 +43,55 @@ export default function Home() {
   // Applications live state (persisting new applications during user session)
   const [applications, setApplications] = useState<CitizenApplication[]>(SAMPLE_APPLICATIONS);
   const [activeTrackingId, setActiveTrackingId] = useState<string>("CD-2026-849201");
+
+  // 3 Featured Services for Home Page matching requested reference UI
+  const featuredServices = useMemo(
+    () => [
+      {
+        num: "01",
+        service: SERVICES_DATA[0], // CNI
+        pillsFr: [
+          "Numéro d'Identification Nationale (NIN)",
+          "Délai légal : 3 à 5 jours ouvrables",
+          "Première délivrance gratuite",
+        ],
+        pillsEn: [
+          "Unique National ID Number (NIN)",
+          "Processing: 3 to 5 business days",
+          "Free initial card issuance",
+        ],
+      },
+      {
+        num: "02",
+        service: SERVICES_DATA[1], // Passeport
+        pillsFr: [
+          "Passeport biométrique conforme OACI",
+          "Délai officiel : 7 à 10 jours ouvrables",
+          "Enrôlement biométrique prioritaire",
+        ],
+        pillsEn: [
+          "ICAO-compliant biometric passport",
+          "Official SLA: 7 to 10 business days",
+          "Priority biometric appointment",
+        ],
+      },
+      {
+        num: "03",
+        service: SERVICES_DATA[2], // Permis
+        pillsFr: [
+          "Format carte à puce biométrique",
+          "Délivrance rapide : 48 à 72 heures",
+          "Homologation nationale des transports",
+        ],
+        pillsEn: [
+          "Smart chip card format",
+          "Fast-track turnaround: 48 to 72 hours",
+          "National Ministry of Transport approval",
+        ],
+      },
+    ],
+    []
+  );
 
   // Filtering services
   const filteredServices = useMemo(() => {
@@ -103,15 +154,21 @@ export default function Home() {
       />
 
       {/* Main Content Body */}
-      <main className="flex-1">
+      <main className="flex-1 pt-24 sm:pt-[105px]">
         {/* ========================================================================= */}
-        {/* 1. LIGHT, GENTLE CIVIC HERO SECTION (No dark banner, refined typography) */}
+        {/* 1. LIGHT, GENTLE CIVIC HERO SECTION WITH CONGO BACKGROUND IMAGE           */}
         {/* ========================================================================= */}
-        <section className="bg-white border-b border-slate-200/80 pt-12 pb-14">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-4">
+        <section
+          className="relative bg-cover bg-center border-b border-slate-200/80 pt-20 sm:pt-28 pb-20 sm:pb-28 overflow-hidden"
+          style={{ backgroundImage: "url('/hero-bg.jpg')" }}
+        >
+          {/* Subtle translucent tint that preserves the vivid background image while ensuring 100% text contrast */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-white/20 to-white/35 pointer-events-none" />
+
+          <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-5">
             {/* National Republic Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50/80 border border-blue-100 text-blue-700 text-xs font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50/95 border border-blue-200 text-blue-800 text-xs sm:text-sm font-semibold shadow-xs backdrop-blur-sm">
+              <span className="w-2 h-2 rounded-full bg-blue-600" />
               <span>
                 {isFr
                   ? "République Démocratique du Congo • Portail des Services Numériques"
@@ -119,45 +176,47 @@ export default function Home() {
               </span>
             </div>
 
-            {/* Clear, gentle heading - no harsh bold */}
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-normal text-slate-900 tracking-tight max-w-3xl mx-auto leading-tight">
+            {/* Clear, larger heading */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-medium text-slate-950 tracking-tight max-w-4xl mx-auto leading-tight drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]">
               {isFr ? (
                 <>
                   L'administration publique simplifiée pour{" "}
-                  <span className="font-medium text-blue-700">tous les citoyens</span>
+                  <span className="font-semibold text-blue-700">tous les citoyens</span>
                 </>
               ) : (
                 <>
-                  Public administration simplified for{" "}
-                  <span className="font-medium text-blue-700">every citizen</span>
+                  Simplified public administration for{" "}
+                  <span className="font-semibold text-blue-700">all citizens</span>
                 </>
               )}
             </h1>
 
-            {/* Subtitle */}
-            <p className="text-xs sm:text-sm text-slate-500 font-normal max-w-2xl mx-auto leading-relaxed">
-              {isFr
-                ? "Délivrance d'actes d'état civil, carte d'identité, passeport, permis de conduire et certificats juridiques sans attente superflue."
-                : "Issuance of civil registry acts, national ID cards, passports, driver's licenses, and legal certificates with ease."}
-            </p>
+            {/* Subtitle - Bigger, crisp, perfectly clear and high contrast */}
+            <div className="max-w-3xl mx-auto">
+              <p className="inline-block text-sm sm:text-base md:text-lg text-slate-900 font-medium leading-relaxed bg-white/70 backdrop-blur-xs px-5 py-2.5 rounded-2xl border border-white/60 shadow-xs">
+                {isFr
+                  ? "Délivrance d'actes d'état civil, carte d'identité, passeport, permis de conduire et certificats juridiques sans attente superflue."
+                  : "Issuance of civil status documents, identity cards, passports, driving licenses and legal certificates without unnecessary waiting."}
+              </p>
+            </div>
 
-            {/* Clean Hero Search */}
+            {/* Clean Hero Search - Bigger, clearer */}
             <div className="max-w-2xl mx-auto pt-2">
-              <div className="relative flex items-center bg-white border border-slate-300 rounded-xl shadow-xs p-1.5 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
-                <Search className="w-4 h-4 text-slate-400 ml-3 shrink-0" />
+              <div className="relative flex items-center bg-white border border-slate-300/90 rounded-2xl shadow-sm p-2 sm:p-2.5 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                <Search className="w-5 h-5 text-slate-400 ml-3.5 shrink-0" />
                 <input
                   type="text"
                   placeholder={
                     isFr
                       ? "Rechercher un service (ex: Passeport, Naissance, Permis, Casier judiciaire...)"
-                      : "Search a service (e.g. Passport, Birth certificate, ID card...)"
+                      : "Search for a service (e.g., Passport, Birth, Driver's License, Criminal Record Check...)"
                   }
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
                     if (activeTab !== "services") setActiveTab("services");
                   }}
-                  className="w-full px-3 py-2 text-xs sm:text-sm text-slate-800 placeholder-slate-400 bg-transparent focus:outline-none"
+                  className="w-full px-3.5 py-2.5 text-sm sm:text-base text-slate-900 placeholder-slate-500 bg-transparent focus:outline-none"
                 />
                 {searchQuery && (
                   <button
@@ -171,15 +230,17 @@ export default function Home() {
                   onClick={() => {
                     if (activeTab !== "services") setActiveTab("services");
                   }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer shrink-0"
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base font-semibold px-6 py-2.5 rounded-xl transition-colors cursor-pointer shrink-0 shadow-xs"
                 >
-                  {isFr ? "Trouver" : "Search"}
+                  {isFr ? "Trouver" : "Find"}
                 </button>
               </div>
 
-              {/* Fast quick links */}
-              <div className="flex flex-wrap items-center justify-center gap-2 pt-3 text-[11px] text-slate-500">
-                <span className="text-slate-400">{isFr ? "Fréquents :" : "Popular:"}</span>
+              {/* Fast quick links - High contrast, clearly legible */}
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-3.5 text-xs sm:text-sm">
+                <span className="text-slate-900 font-semibold drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]">
+                  {isFr ? "Fréquents :" : "Frequent:"}
+                </span>
                 {["CNI", "Passeport", "Casier Judiciaire", "Acte de Naissance", "Permis"].map(
                   (item, i) => (
                     <button
@@ -188,7 +249,7 @@ export default function Home() {
                         setSearchQuery(item);
                         setActiveTab("services");
                       }}
-                      className="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200/70 text-slate-600 transition-colors cursor-pointer"
+                      className="px-3 py-1 rounded-lg bg-white/95 border border-slate-300 hover:bg-white text-slate-900 font-medium transition-colors cursor-pointer shadow-xs hover:border-blue-400 hover:text-blue-700"
                     >
                       {item}
                     </button>
@@ -196,62 +257,87 @@ export default function Home() {
                 )}
               </div>
             </div>
+          </div>
+        </section>
 
-            {/* 3 Calm Quick Action Shortcuts */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl mx-auto pt-6 text-left">
-              <div
-                onClick={() => setActiveTab("services")}
-                className="p-3.5 rounded-xl border border-slate-200/90 bg-slate-50/60 hover:bg-white hover:border-blue-200 hover:shadow-xs transition-all cursor-pointer group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-blue-100/70 text-blue-700 flex items-center justify-center shrink-0">
-                    <FileText className="w-4 h-4 stroke-[1.75]" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-slate-800 group-hover:text-blue-700">
-                      {isFr ? "12 Démarches en ligne" : "12 Online Procedures"}
-                    </div>
-                    <div className="text-[11px] text-slate-500 font-normal">
-                      {isFr ? "Catalogue complet" : "Complete directory"}
-                    </div>
-                  </div>
+        {/* ========================================================================= */}
+        {/* PRESIDENTIAL VISION SECTION                                               */}
+        {/* ========================================================================= */}
+        <section id="presidential-vision" className="max-w-5xl mx-auto px-4 sm:px-6 pt-10 scroll-mt-24">
+          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+            <div className="grid grid-cols-1 md:grid-cols-12 items-center">
+              {/* President portrait */}
+              <div className="md:col-span-5 relative h-72 md:h-full min-h-[300px] overflow-hidden bg-slate-100">
+                <img
+                  src="/president.jpg"
+                  alt={
+                    isFr
+                      ? "Son Excellence Félix-Antoine Tshisekedi Tshilombo — Président de la République"
+                      : "His Excellency Félix-Antoine Tshisekedi Tshilombo — President of the Republic"
+                  }
+                  className="w-full h-full object-cover object-top"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent md:hidden" />
+                <div className="absolute bottom-3 left-3 md:hidden text-white text-xs font-medium">
+                  {isFr ? "S.E. Félix-Antoine Tshisekedi" : "H.E. Félix-Antoine Tshisekedi"}
                 </div>
               </div>
 
-              <div
-                onClick={() => setActiveTab("track")}
-                className="p-3.5 rounded-xl border border-slate-200/90 bg-slate-50/60 hover:bg-white hover:border-blue-200 hover:shadow-xs transition-all cursor-pointer group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-100/70 text-emerald-700 flex items-center justify-center shrink-0">
-                    <Clock className="w-4 h-4 stroke-[1.75]" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-slate-800 group-hover:text-emerald-700">
-                      {isFr ? "Suivre un dossier" : "Track Application"}
-                    </div>
-                    <div className="text-[11px] text-slate-500 font-normal">
-                      {isFr ? "Statut en temps réel" : "Real-time timeline"}
-                    </div>
-                  </div>
+              {/* Presidential Vision text */}
+              <div className="md:col-span-7 p-6 sm:p-8 space-y-4 text-left">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-blue-50 border border-blue-100 text-blue-700 text-xs font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                  <span>
+                    {isFr
+                      ? "Présidence de la République • Vision Numérique"
+                      : "Presidency of the Republic • Digital Vision"}
+                  </span>
                 </div>
-              </div>
 
-              <div
-                onClick={() => setActiveTab("verify")}
-                className="p-3.5 rounded-xl border border-slate-200/90 bg-slate-50/60 hover:bg-white hover:border-blue-200 hover:shadow-xs transition-all cursor-pointer group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-100/70 text-indigo-700 flex items-center justify-center shrink-0">
-                    <ShieldCheck className="w-4 h-4 stroke-[1.75]" />
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 tracking-tight">
+                    {isFr
+                      ? "Son Excellence Félix-Antoine Tshisekedi Tshilombo"
+                      : "His Excellency Félix-Antoine Tshisekedi Tshilombo"}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">
+                    {isFr
+                      ? "Président de la République Démocratique du Congo, Chef de l'État"
+                      : "President of the Democratic Republic of the Congo, Head of State"}
+                  </p>
+                </div>
+
+                <blockquote className="border-l-3 border-blue-600 pl-4 text-sm sm:text-base text-slate-700 font-normal italic leading-relaxed">
+                  {isFr
+                    ? "« Notre ambition est de faire du numérique un puissant levier d'intégration, de transparence et d'équité, en rapprochant l'administration de chaque citoyenne et de chaque citoyen congolais, sur toute l'étendue de la République. »"
+                    : "« Our ambition is to make digital technology a powerful driver of integration, transparency, and equity, bringing public administration directly to every Congolese citizen across the entire Republic. »"}
+                </blockquote>
+
+                {/* 3 National Pillars */}
+                <div className="pt-2 grid grid-cols-3 gap-2.5 border-t border-slate-100 text-center">
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <span className="block text-xs sm:text-sm font-semibold text-slate-900">
+                      {isFr ? "Justice" : "Justice"}
+                    </span>
+                    <span className="text-xs text-slate-500 font-normal">
+                      {isFr ? "Égalité régalienne" : "Sovereign equity"}
+                    </span>
                   </div>
-                  <div>
-                    <div className="text-xs font-medium text-slate-800 group-hover:text-indigo-700">
-                      {isFr ? "Vérifier un document" : "Verify Document"}
-                    </div>
-                    <div className="text-[11px] text-slate-500 font-normal">
-                      {isFr ? "Certificat QR officiel" : "Official QR security"}
-                    </div>
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <span className="block text-xs sm:text-sm font-semibold text-slate-900">
+                      {isFr ? "Paix" : "Peace"}
+                    </span>
+                    <span className="text-xs text-slate-500 font-normal">
+                      {isFr ? "Sécurité juridique" : "Legal security"}
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <span className="block text-xs sm:text-sm font-semibold text-slate-900">
+                      {isFr ? "Travail" : "Labor"}
+                    </span>
+                    <span className="text-xs text-slate-500 font-normal">
+                      {isFr ? "Service d'excellence" : "Excellence in service"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -263,66 +349,116 @@ export default function Home() {
         {/* 2. TABBED CONTENT SECTION */}
         {/* ========================================================================= */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          {/* TAB 1: SERVICES DIRECTORY */}
+          {/* TAB 1: 3 FEATURED SERVICES WITH NEW CARD UI MATCHING USER REFERENCE */}
           {activeTab === "services" && (
-            <div className="space-y-6">
-              {/* Category Pills Filter */}
-              <div className="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-slate-200/70">
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
-                  {CATEGORIES.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => setSelectedCategory(cat.id as ServiceCategory)}
-                      className={`px-3 py-1.5 rounded-lg text-xs transition-colors shrink-0 cursor-pointer ${
-                        selectedCategory === cat.id
-                          ? "bg-slate-900 text-white font-medium"
-                          : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                      }`}
-                    >
-                      {isFr ? cat.labelFr : cat.labelEn}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="text-xs text-slate-500 font-normal">
+            <div className="space-y-8">
+              {/* Section Header */}
+              <div className="text-center max-w-2xl mx-auto space-y-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
                   <span>
-                    {filteredServices.length}{" "}
-                    {isFr ? "services disponibles" : "available services"}
+                    {isFr ? "Services Publics Prioritaires" : "Priority Public Services"}
                   </span>
                 </div>
+                <h2 className="text-xl sm:text-2xl font-normal text-slate-900 tracking-tight">
+                  {isFr ? (
+                    <>
+                      Démarches Citoyennes <span className="font-medium text-blue-700">Principales</span>
+                    </>
+                  ) : (
+                    <>
+                      Key Citizen <span className="font-medium text-blue-700">Procedures</span>
+                    </>
+                  )}
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-500 font-normal">
+                  {isFr
+                    ? "Les démarches officielles les plus sollicitées par les citoyens de la République."
+                    : "The most requested official procedures by citizens of the Republic."}
+                </p>
               </div>
 
-              {/* Service Cards Grid */}
-              {filteredServices.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {filteredServices.map((service) => (
-                    <ServiceCard
-                      key={service.id}
-                      service={service}
-                      language={language}
-                      onSelect={(srv) => setDetailService(srv)}
-                      onApply={(srv) => setApplyService(srv)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-white rounded-xl border border-slate-200 p-12 text-center space-y-2">
-                  <p className="text-xs text-slate-500 font-normal">
-                    {isFr
-                      ? "Aucun service ne correspond à votre recherche."
-                      : "No services match your search."}
-                  </p>
-                  <button
-                    onClick={() => {
-                      setSearchQuery("");
-                      setSelectedCategory("all");
-                    }}
-                    className="text-xs text-blue-600 font-medium hover:underline cursor-pointer"
+              {/* 3 Featured Service Cards - UI Matching Reference Image */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {featuredServices.map((item) => (
+                  <div
+                    key={item.service.id}
+                    className="bg-[#edf3ff] rounded-[28px] p-7 border border-[#d6e4ff] flex flex-col justify-between hover:border-blue-300 hover:shadow-md transition-all duration-300 group"
                   >
-                    {isFr ? "Réinitialiser les filtres" : "Reset filters"}
-                  </button>
-                </div>
-              )}
+                    <div>
+                      {/* Big Index Number (01, 02, 03) - Exact styling matching user reference UI */}
+                      <div className="text-[44px] sm:text-[52px] font-black text-[#6d90fb] leading-none tracking-tight mb-5 select-none">
+                        {item.num}
+                      </div>
+
+                      {/* Title */}
+                      <h3
+                        onClick={() => setDetailService(item.service)}
+                        className="text-lg sm:text-xl font-bold text-slate-950 group-hover:text-blue-700 transition-colors cursor-pointer leading-snug mb-2 min-h-[52px]"
+                      >
+                        {isFr ? item.service.titleFr : item.service.titleEn}
+                      </h3>
+
+                      {/* Ministry */}
+                      <p className="text-xs sm:text-sm text-slate-600 font-medium truncate mb-3">
+                        {isFr ? item.service.ministryFr : item.service.ministryEn}
+                      </p>
+
+                      {/* Description */}
+                      <p className="text-xs sm:text-sm text-slate-700 font-normal leading-relaxed mb-6 line-clamp-3 min-h-[54px]">
+                        {isFr ? item.service.descriptionFr : item.service.descriptionEn}
+                      </p>
+
+                      {/* Deliverables / Checklist Pills Matching Reference Image */}
+                      <div className="space-y-2.5 mb-6">
+                        {(isFr ? item.pillsFr : item.pillsEn).map((pill, pIdx) => (
+                          <div
+                            key={pIdx}
+                            className="w-full flex items-center gap-2.5 bg-white border border-[#d6e4ff] rounded-full px-4 py-2 text-xs sm:text-sm text-slate-800 shadow-2xs font-medium"
+                          >
+                            <CheckCircle2 className="w-4 h-4 text-[#6d90fb] shrink-0 stroke-[2.2]" />
+                            <span className="truncate">{pill}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="pt-4 border-t border-blue-200/50 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setDetailService(item.service)}
+                        className="flex-1 h-9 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-normal transition-colors cursor-pointer"
+                      >
+                        {isFr ? "Détails" : "Details"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setApplyService(item.service)}
+                        className="flex-1 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium inline-flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                      >
+                        <span>{isFr ? "Postuler" : "Apply"}</span>
+                        <ArrowRight className="w-3.5 h-3.5 stroke-[2]" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* View All Services Button */}
+              <div className="pt-4 text-center">
+                <Link
+                  href="/services"
+                  className="inline-flex items-center gap-2 bg-white hover:bg-blue-50 text-slate-800 hover:text-blue-700 border border-slate-300 hover:border-blue-300 px-6 py-3 rounded-full text-xs sm:text-sm font-medium shadow-xs transition-all cursor-pointer"
+                >
+                  <span>
+                    {isFr
+                      ? "Voir tous les services (12 démarches disponibles)"
+                      : "View all services (12 available procedures)"}
+                  </span>
+                  <ArrowRight className="w-4 h-4 stroke-[2]" />
+                </Link>
+              </div>
 
               {/* Citizen Workflow 4-Step Guide */}
               <div className="mt-14 bg-white rounded-2xl border border-slate-200 p-6 md:p-8">

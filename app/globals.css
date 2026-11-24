@@ -87,3 +87,58 @@ button:focus-visible {
     width: 100% !important;
   }
 }
+
+/* ========================================================================== */
+/* Official Submission Animated Checkmark                                     */
+/* ========================================================================== */
+@keyframes checkmark-pop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes checkmark-circle {
+  0% {
+    stroke-dashoffset: 150;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes checkmark-check {
+  0% {
+    stroke-dashoffset: 36;
+  }
+  40% {
+    stroke-dashoffset: 36;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-checkmark-pop {
+  animation: checkmark-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.animate-checkmark-circle {
+  stroke-dasharray: 150;
+  stroke-dashoffset: 150;
+  animation: checkmark-circle 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.animate-checkmark-check {
+  stroke-dasharray: 36;
+  stroke-dashoffset: 36;
+  animation: checkmark-check 0.85s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}

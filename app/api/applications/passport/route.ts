@@ -194,3 +194,93 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const {
+      trackingId,
+      status, // "approved", "ready", "rejected", "in_review"
+      officerName = "Chef de Service Chancellerie",
+      notesFr,
+      notesEn,
+      passportNumber: customPassportNumber,
+    } = body;
+
+    if (!trackingId || !status) {
+      return NextResponse.json(
+        { error: "trackingId et status sont obligatoires." },
+        { status: 400 }
+      );
+    }
+
+    const trackingIdHash = hashSHA256(trackingId.trim());
+
+    // Generate and encrypt official DRC passport number (OP-CD-XXXXXXX) if approved
+    let encryptedPassportNumber = null;
+    let passportHash = null;
+
+    if (status === "approved" || status === "ready") {
+      const generatedNumber =
+        customPassportNumber ||
+        `OP-CD-${Math.floor(1000000 + Math.random() * 9000000)}`;
+      encryptedPassportNumber = encryptAES256(generatedNumber);
+      passportHash = hashSHA256(generatedNumber);
+    }
+
+    const updateSql = `
+      UPDATE passport_applications
+      SET
+        status = $1,
+        status_notes_fr = COALESCE($2, status_notes_fr),
+        status_notes_en = COALESCE($3, status_notes_en),
+        passport_number = COALESCE($4, passport_number),
+        passport_hash = COALESCE($5, passport_hash),
+        approved_at = CASE WHEN $1 IN ('approved', 'ready') THEN CURRENT_TIMESTAMP ELSE approved_at END,
+        approved_by = CASE WHEN $1 IN ('approved', 'ready') THEN $6 ELSE approved_by END,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE tracking_id_hash = $7
+      RETURNING *;
+    `;
+
+    const values = [
+      status,
+      notesFr ||
+        (status === "approved"
+          ? "Dossier approuvé par le Chef de Service. Livret de passeport transmis pour personnalisation et encodage de puce."
+          : null),
+      notesEn ||
+        (status === "approved"
+          ? "Dossier approved by Head of Service. Passport booklet queued for personalization and chip encoding."
+          : null),
+      encryptedPassportNumber,
+      passportHash,
+      officerName,
+      trackingIdHash,
+    ];
+
+    const result = await query(updateSql, values);
+
+    if (result.rows.length === 0) {
+      return NextResponse.json(
+        { error: "Demande de passeport introuvable." },
+        { status: 404 }
+      );
+    }
+
+    const updatedApp = formatPassportRow(result.rows[0]);
+
+    return NextResponse.json({
+      success: true,
+      message: `Statut mis à jour (${status}) et numéro de passeport enregistré de manière chiffrée.`,
+      application: updatedApp,
+    });
+  } catch (error: unknown) {
+    console.error("Erreur lors de la mise à jour de la demande de passeport:", error);
+    const errMsg = error instanceof Error ? error.message : "Erreur interne";
+    return NextResponse.json(
+      { error: "Impossible de mettre à jour la demande", details: errMsg },
+      { status: 500 }
+    );
+  }
+}

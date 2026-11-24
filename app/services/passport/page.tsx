@@ -7,6 +7,7 @@ import { Language, CitizenApplication } from "@/types";
 import { SERVICES_DATA } from "@/data/services";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { AnimatedCheckmark } from "@/components/AnimatedCheckmark";
 import {
   Globe,
   CheckCircle2,
@@ -66,7 +67,7 @@ const DRC_PROVINCES = [
 ];
 
 const PASSPORT_HUBS = [
-  { id: "kinshasa-chancellerie", labelFr: "Kinshasa - Direction Centrale de la Chancellerie (Gombe)", labelEn: "Kinshasa - Central Chancery Directorate (Gombe)" },
+  { id: "kinshasa-chancellerie", labelFr: "Kinshasa - Direction Centrale de la Chancellerie - Gombe", labelEn: "Kinshasa - Central Chancery Directorate - Gombe" },
   { id: "kinshasa-limete", labelFr: "Kinshasa - Centre d'Enrôlement de Limete", labelEn: "Kinshasa - Limete Enrollment Center" },
   { id: "lubumbashi", labelFr: "Haut-Katanga - Direction Provinciale de Lubumbashi", labelEn: "Haut-Katanga - Lubumbashi Provincial Directorate" },
   { id: "goma", labelFr: "Nord-Kivu - Antenne Provinciale de Goma", labelEn: "Nord-Kivu - Goma Provincial Branch" },
@@ -331,7 +332,7 @@ function PassportApplicationContent() {
 
   // Enrollment Hub
   const [collectionPoint, setCollectionPoint] = useState(
-    "Kinshasa - Direction Centrale de la Chancellerie (Gombe)"
+    "Kinshasa - Direction Centrale de la Chancellerie - Gombe"
   );
 
   // Identity Photo & Modal
@@ -356,6 +357,12 @@ function PassportApplicationContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedApp, setSubmittedApp] = useState<CitizenApplication | null>(null);
   const [hasCopied, setHasCopied] = useState(false);
+
+  useEffect(() => {
+    if (submittedApp) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [submittedApp]);
 
   // Demo auto-fill option
   const handleDemoFill = () => {
@@ -382,7 +389,7 @@ function PassportApplicationContent() {
     setPhone("+243 99 876 5432");
     setEmail("b.ilunga@example.cd");
 
-    setCollectionPoint("Kinshasa - Direction Centrale de la Chancellerie (Gombe)");
+    setCollectionPoint("Kinshasa - Direction Centrale de la Chancellerie - Gombe");
 
     // Sample documents for demo
     setPhotoFileName("photo_oaci_ilunga.jpg");
@@ -493,8 +500,8 @@ function PassportApplicationContent() {
     if (!fatherFullName.trim() || !motherFullName.trim()) {
       setValidationError(
         isFr
-          ? "Veuillez renseigner les informations des deux parents (filiation obligatoire)."
-          : "Please provide full names for both parents (mandatory lineage)."
+          ? "Veuillez renseigner les informations des deux parents - filiation obligatoire."
+          : "Please provide full names for both parents - mandatory lineage."
       );
       return;
     }
@@ -700,7 +707,7 @@ function PassportApplicationContent() {
           {/* Translucent overlay maintaining crisp contrast */}
           <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/80 to-white/90 backdrop-blur-[0.5px] pointer-events-none" />
 
-          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-2.5">
+          <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-2.5">
             {/* Centered Main Title */}
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight uppercase">
               {isFr ? (
@@ -719,13 +726,13 @@ function PassportApplicationContent() {
             {/* Centered Subtitle */}
             <p className="max-w-2xl mx-auto text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
               {isFr
-                ? "Demande officielle en ligne pour l'obtention du passeport ordinaire conforme aux normes internationales de l'OACI (Doc 9303) pour vos voyages à l'international."
-                : "Official online application for the standard Congolese passport for international travel, compliant with international ICAO standards (Doc 9303)."}
+                ? "Demande officielle en ligne pour l'obtention du passeport ordinaire conforme aux normes internationales de l'OACI pour vos voyages à l'international."
+                : "Official online application for the standard Congolese passport for international travel, compliant with international ICAO standards."}
             </p>
           </div>
         </section>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
           {/* Form Card OR Receipt */}
           {!submittedApp ? (
             <div className="relative bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-10 space-y-8">
@@ -862,7 +869,7 @@ function PassportApplicationContent() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 pb-2 border-b border-slate-100 text-slate-900">
                       <User className="w-4 h-4 text-blue-600" />
-                      <h2 className="text-sm font-bold uppercase tracking-wider">
+                      <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900">
                         {isFr ? "Identité Civile du Bénéficiaire" : "Citizen Civil Identity"}
                       </h2>
                     </div>
@@ -922,7 +929,7 @@ function PassportApplicationContent() {
                               onChange={() => setGender("M")}
                               className="text-blue-600 focus:ring-blue-500"
                             />
-                            <span>{isFr ? "Masculin (M)" : "Male (M)"}</span>
+                            <span>{isFr ? "Masculin" : "Male"}</span>
                           </label>
                           <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
                             <input
@@ -932,7 +939,7 @@ function PassportApplicationContent() {
                               onChange={() => setGender("F")}
                               className="text-blue-600 focus:ring-blue-500"
                             />
-                            <span>{isFr ? "Féminin (F)" : "Female (F)"}</span>
+                            <span>{isFr ? "Féminin" : "Female"}</span>
                           </label>
                         </div>
                       </div>
@@ -985,9 +992,9 @@ function PassportApplicationContent() {
                           className="w-full text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-blue-500 text-slate-900 font-medium"
                         >
                           <option value="Célibataire">{isFr ? "Célibataire" : "Single"}</option>
-                          <option value="Marié(e)">{isFr ? "Marié(e)" : "Married"}</option>
-                          <option value="Divorcé(e)">{isFr ? "Divorcé(e)" : "Divorced"}</option>
-                          <option value="Veuf/Veuve">{isFr ? "Veuf / Veuve" : "Widowed"}</option>
+                          <option value="Marié">{isFr ? "Marié" : "Married"}</option>
+                          <option value="Divorcé">{isFr ? "Divorcé" : "Divorced"}</option>
+                          <option value="Veuf / Veuve">{isFr ? "Veuf / Veuve" : "Widowed"}</option>
                         </select>
                       </div>
 
@@ -1010,8 +1017,8 @@ function PassportApplicationContent() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 pb-2 border-b border-slate-100 text-slate-900">
                       <Users className="w-4 h-4 text-blue-600" />
-                      <h2 className="text-sm font-bold uppercase tracking-wider">
-                        {isFr ? "Filiation & Lignée (Parents)" : "Parental Lineage & Filiation"}
+                      <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900">
+                        {isFr ? "Filiation Parentale & Nationalité des Parents" : "Parental Lineage & Parents' Nationality"}
                       </h2>
                     </div>
 
@@ -1074,7 +1081,7 @@ function PassportApplicationContent() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 pb-2 border-b border-slate-100 text-slate-900">
                       <MapPin className="w-4 h-4 text-blue-600" />
-                      <h2 className="text-sm font-bold uppercase tracking-wider">
+                      <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900">
                         {isFr ? "Origine & Résidence Actuelle" : "Origin & Current Residence"}
                       </h2>
                     </div>
@@ -1145,7 +1152,7 @@ function PassportApplicationContent() {
 
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-slate-700">
-                        {isFr ? "Adresse physique complète (N°, Rue, Quartier) *" : "Full Street Address *"}
+                        {isFr ? "Adresse physique complète *" : "Full Street Address *"}
                       </label>
                       <input
                         type="text"
@@ -1237,27 +1244,27 @@ function PassportApplicationContent() {
                     </h2>
                     <p className="text-xs text-slate-500">
                       {isFr
-                        ? "Fournissez les documents requis pour l'instruction de votre passeport (PDF, JPG, PNG - Max 5 Mo par pièce)."
-                        : "Attach required documents for your passport processing (PDF, JPG, PNG - Max 5 MB each)."}
+                        ? "Fournissez les documents requis pour l'instruction de votre passeport. Formats acceptés : PDF, JPG, PNG - Max 5 Mo."
+                        : "Attach required documents for your passport processing. Accepted formats: PDF, JPG, PNG - Max 5MB."}
                     </p>
                   </div>
 
                   <div className="space-y-3">
                     {/* Row 1: Identity Photo */}
-                    <div className="border border-slate-200 rounded-xl p-3.5 sm:p-4.5 bg-white hover:border-blue-200 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
-                      <div className="flex items-center gap-3">
+                    <div className="border border-slate-200 rounded-xl px-4 py-3.5 sm:px-5 sm:py-3.5 bg-white hover:border-blue-200 transition-colors flex items-center justify-between gap-3 sm:gap-4 shadow-2xs min-h-[66px]">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-700 font-bold text-xs sm:text-sm flex items-center justify-center shrink-0 border border-blue-100">
                           1
                         </div>
-                        <span className="font-bold text-xs sm:text-sm text-slate-900">
-                          {isFr ? "Photo d'Identité (Norme OACI)" : "Identity Photo (ICAO Standard)"}{" "}
+                        <span className="font-bold text-xs sm:text-sm text-slate-900 truncate">
+                          {isFr ? "Photo d'Identité Officielle" : "Official Identity Photo"}{" "}
                           <span className="text-red-500">*</span>
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-end gap-3 flex-wrap">
+                      <div className="flex items-center justify-end gap-2.5 sm:gap-3 shrink-0 flex-nowrap">
                         {photoFileName ? (
-                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700 shadow-2xs">
+                          <div className="flex items-center gap-2 px-3 h-9 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700 shadow-2xs shrink-0">
                             {photoDataUrl ? (
                               <img
                                 src={photoDataUrl}
@@ -1267,7 +1274,7 @@ function PassportApplicationContent() {
                             ) : (
                               <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                             )}
-                            <span className="truncate max-w-[140px] sm:max-w-[200px]">{photoFileName}</span>
+                            <span className="truncate max-w-[130px] sm:max-w-[200px]">{photoFileName}</span>
                             <button
                               type="button"
                               onClick={() => {
@@ -1281,7 +1288,7 @@ function PassportApplicationContent() {
                             </button>
                           </div>
                         ) : (
-                          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50/50 border border-dashed border-slate-200 text-xs font-mono text-slate-400">
+                          <div className="hidden sm:flex items-center gap-2 px-3 h-9 rounded-lg bg-slate-50/50 border border-dashed border-slate-200 text-xs font-mono text-slate-400 shrink-0">
                             <FileText className="w-3.5 h-3.5 text-slate-300 shrink-0" />
                             <span>{isFr ? "Aucun fichier" : "No file chosen"}</span>
                           </div>
@@ -1293,7 +1300,7 @@ function PassportApplicationContent() {
                             setIsCameraModalOpen(true);
                             startCamera();
                           }}
-                          className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs shrink-0"
+                          className="h-9 px-3.5 sm:px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-colors cursor-pointer shadow-xs shrink-0 whitespace-nowrap"
                         >
                           <Camera className="w-4 h-4 text-white" />
                           <span>
@@ -1306,22 +1313,22 @@ function PassportApplicationContent() {
                     </div>
 
                     {/* Row 2: Secured Birth Certificate */}
-                    <div className="border border-slate-200 rounded-xl p-3.5 sm:p-4.5 bg-white hover:border-blue-200 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
-                      <div className="flex items-center gap-3">
+                    <div className="border border-slate-200 rounded-xl px-4 py-3.5 sm:px-5 sm:py-3.5 bg-white hover:border-blue-200 transition-colors flex items-center justify-between gap-3 sm:gap-4 shadow-2xs min-h-[66px]">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-700 font-bold text-xs sm:text-sm flex items-center justify-center shrink-0 border border-blue-100">
                           2
                         </div>
-                        <span className="font-bold text-xs sm:text-sm text-slate-900">
+                        <span className="font-bold text-xs sm:text-sm text-slate-900 truncate">
                           {isFr ? "Acte de Naissance Sécurisé" : "Certified Birth Certificate"}{" "}
                           <span className="text-red-500">*</span>
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-end gap-3 flex-wrap">
+                      <div className="flex items-center justify-end gap-2.5 sm:gap-3 shrink-0 flex-nowrap">
                         {birthCertDoc ? (
-                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700 shadow-2xs">
+                          <div className="flex items-center gap-2 px-3 h-9 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700 shadow-2xs shrink-0">
                             <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                            <span className="truncate max-w-[140px] sm:max-w-[200px]">{birthCertDoc}</span>
+                            <span className="truncate max-w-[130px] sm:max-w-[200px]">{birthCertDoc}</span>
                             <button
                               type="button"
                               onClick={() => setBirthCertDoc(null)}
@@ -1332,13 +1339,13 @@ function PassportApplicationContent() {
                             </button>
                           </div>
                         ) : (
-                          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50/50 border border-dashed border-slate-200 text-xs font-mono text-slate-400">
+                          <div className="hidden sm:flex items-center gap-2 px-3 h-9 rounded-lg bg-slate-50/50 border border-dashed border-slate-200 text-xs font-mono text-slate-400 shrink-0">
                             <FileText className="w-3.5 h-3.5 text-slate-300 shrink-0" />
                             <span>{isFr ? "Aucun fichier" : "No file chosen"}</span>
                           </div>
                         )}
 
-                        <label className="px-4 py-2 rounded-lg bg-white hover:bg-blue-50/60 hover:text-blue-700 hover:border-blue-300 border border-slate-200 text-slate-800 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs shrink-0">
+                        <label className="h-9 px-3.5 sm:px-4 rounded-lg bg-white hover:bg-blue-50/60 hover:text-blue-700 hover:border-blue-300 border border-slate-200 text-slate-800 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-colors cursor-pointer shadow-xs shrink-0 whitespace-nowrap">
                           <Upload className="w-4 h-4 text-blue-600" />
                           <span>{isFr ? "Choisir un fichier" : "Choose File"}</span>
                           <input
@@ -1352,22 +1359,22 @@ function PassportApplicationContent() {
                     </div>
 
                     {/* Row 3: Legalized Nationality Certificate */}
-                    <div className="border border-slate-200 rounded-xl p-3.5 sm:p-4.5 bg-white hover:border-blue-200 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
-                      <div className="flex items-center gap-3">
+                    <div className="border border-slate-200 rounded-xl px-4 py-3.5 sm:px-5 sm:py-3.5 bg-white hover:border-blue-200 transition-colors flex items-center justify-between gap-3 sm:gap-4 shadow-2xs min-h-[66px]">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-700 font-bold text-xs sm:text-sm flex items-center justify-center shrink-0 border border-blue-100">
                           3
                         </div>
-                        <span className="font-bold text-xs sm:text-sm text-slate-900">
+                        <span className="font-bold text-xs sm:text-sm text-slate-900 truncate">
                           {isFr ? "Certificat de Nationalité Légalisé" : "Legalized Nationality Certificate"}{" "}
                           <span className="text-red-500">*</span>
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-end gap-3 flex-wrap">
+                      <div className="flex items-center justify-end gap-2.5 sm:gap-3 shrink-0 flex-nowrap">
                         {nationalityCertDoc ? (
-                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700 shadow-2xs">
+                          <div className="flex items-center gap-2 px-3 h-9 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700 shadow-2xs shrink-0">
                             <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                            <span className="truncate max-w-[140px] sm:max-w-[200px]">{nationalityCertDoc}</span>
+                            <span className="truncate max-w-[130px] sm:max-w-[200px]">{nationalityCertDoc}</span>
                             <button
                               type="button"
                               onClick={() => setNationalityCertDoc(null)}
@@ -1378,13 +1385,13 @@ function PassportApplicationContent() {
                             </button>
                           </div>
                         ) : (
-                          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50/50 border border-dashed border-slate-200 text-xs font-mono text-slate-400">
+                          <div className="hidden sm:flex items-center gap-2 px-3 h-9 rounded-lg bg-slate-50/50 border border-dashed border-slate-200 text-xs font-mono text-slate-400 shrink-0">
                             <FileText className="w-3.5 h-3.5 text-slate-300 shrink-0" />
                             <span>{isFr ? "Aucun fichier" : "No file chosen"}</span>
                           </div>
                         )}
 
-                        <label className="px-4 py-2 rounded-lg bg-white hover:bg-blue-50/60 hover:text-blue-700 hover:border-blue-300 border border-slate-200 text-slate-800 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs shrink-0">
+                        <label className="h-9 px-3.5 sm:px-4 rounded-lg bg-white hover:bg-blue-50/60 hover:text-blue-700 hover:border-blue-300 border border-slate-200 text-slate-800 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-colors cursor-pointer shadow-xs shrink-0 whitespace-nowrap">
                           <Upload className="w-4 h-4 text-blue-600" />
                           <span>{isFr ? "Choisir un fichier" : "Choose File"}</span>
                           <input
@@ -1398,22 +1405,22 @@ function PassportApplicationContent() {
                     </div>
 
                     {/* Row 4: Valid ID / Attestation */}
-                    <div className="border border-slate-200 rounded-xl p-3.5 sm:p-4.5 bg-white hover:border-blue-200 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
-                      <div className="flex items-center gap-3">
+                    <div className="border border-slate-200 rounded-xl px-4 py-3.5 sm:px-5 sm:py-3.5 bg-white hover:border-blue-200 transition-colors flex items-center justify-between gap-3 sm:gap-4 shadow-2xs min-h-[66px]">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-700 font-bold text-xs sm:text-sm flex items-center justify-center shrink-0 border border-blue-100">
                           4
                         </div>
-                        <span className="font-bold text-xs sm:text-sm text-slate-900">
+                        <span className="font-bold text-xs sm:text-sm text-slate-900 truncate">
                           {isFr ? "Carte d'Identité ou Attestation Valide" : "National ID / Valid Identification"}{" "}
                           <span className="text-red-500">*</span>
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-end gap-3 flex-wrap">
+                      <div className="flex items-center justify-end gap-2.5 sm:gap-3 shrink-0 flex-nowrap">
                         {identityCardDoc ? (
-                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700 shadow-2xs">
+                          <div className="flex items-center gap-2 px-3 h-9 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700 shadow-2xs shrink-0">
                             <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                            <span className="truncate max-w-[140px] sm:max-w-[200px]">{identityCardDoc}</span>
+                            <span className="truncate max-w-[130px] sm:max-w-[200px]">{identityCardDoc}</span>
                             <button
                               type="button"
                               onClick={() => setIdentityCardDoc(null)}
@@ -1424,13 +1431,13 @@ function PassportApplicationContent() {
                             </button>
                           </div>
                         ) : (
-                          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50/50 border border-dashed border-slate-200 text-xs font-mono text-slate-400">
+                          <div className="hidden sm:flex items-center gap-2 px-3 h-9 rounded-lg bg-slate-50/50 border border-dashed border-slate-200 text-xs font-mono text-slate-400 shrink-0">
                             <FileText className="w-3.5 h-3.5 text-slate-300 shrink-0" />
                             <span>{isFr ? "Aucun fichier" : "No file chosen"}</span>
                           </div>
                         )}
 
-                        <label className="px-4 py-2 rounded-lg bg-white hover:bg-blue-50/60 hover:text-blue-700 hover:border-blue-300 border border-slate-200 text-slate-800 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs shrink-0">
+                        <label className="h-9 px-3.5 sm:px-4 rounded-lg bg-white hover:bg-blue-50/60 hover:text-blue-700 hover:border-blue-300 border border-slate-200 text-slate-800 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-colors cursor-pointer shadow-xs shrink-0 whitespace-nowrap">
                           <Upload className="w-4 h-4 text-blue-600" />
                           <span>{isFr ? "Choisir un fichier" : "Choose File"}</span>
                           <input
@@ -1444,22 +1451,22 @@ function PassportApplicationContent() {
                     </div>
 
                     {/* Row 5: Certificate of Residence or Police Clearance */}
-                    <div className="border border-slate-200 rounded-xl p-3.5 sm:p-4.5 bg-white hover:border-blue-200 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
-                      <div className="flex items-center gap-3">
+                    <div className="border border-slate-200 rounded-xl px-4 py-3.5 sm:px-5 sm:py-3.5 bg-white hover:border-blue-200 transition-colors flex items-center justify-between gap-3 sm:gap-4 shadow-2xs min-h-[66px]">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-700 font-bold text-xs sm:text-sm flex items-center justify-center shrink-0 border border-blue-100">
                           5
                         </div>
-                        <span className="font-bold text-xs sm:text-sm text-slate-900">
-                          {isFr ? "Certificat de Résidence ou Casier Judiciaire" : "Proof of Residence / Police Clearance"}{" "}
+                        <span className="font-bold text-xs sm:text-sm text-slate-900 truncate">
+                          {isFr ? "Certificat de Résidence Récent" : "Proof of Residence / Police Clearance"}{" "}
                           <span className="text-red-500">*</span>
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-end gap-3 flex-wrap">
+                      <div className="flex items-center justify-end gap-2.5 sm:gap-3 shrink-0 flex-nowrap">
                         {residenceDoc ? (
-                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700 shadow-2xs">
+                          <div className="flex items-center gap-2 px-3 h-9 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700 shadow-2xs shrink-0">
                             <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                            <span className="truncate max-w-[140px] sm:max-w-[200px]">{residenceDoc}</span>
+                            <span className="truncate max-w-[130px] sm:max-w-[200px]">{residenceDoc}</span>
                             <button
                               type="button"
                               onClick={() => setResidenceDoc(null)}
@@ -1470,13 +1477,13 @@ function PassportApplicationContent() {
                             </button>
                           </div>
                         ) : (
-                          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50/50 border border-dashed border-slate-200 text-xs font-mono text-slate-400">
+                          <div className="hidden sm:flex items-center gap-2 px-3 h-9 rounded-lg bg-slate-50/50 border border-dashed border-slate-200 text-xs font-mono text-slate-400 shrink-0">
                             <FileText className="w-3.5 h-3.5 text-slate-300 shrink-0" />
                             <span>{isFr ? "Aucun fichier" : "No file chosen"}</span>
                           </div>
                         )}
 
-                        <label className="px-4 py-2 rounded-lg bg-white hover:bg-blue-50/60 hover:text-blue-700 hover:border-blue-300 border border-slate-200 text-slate-800 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs shrink-0">
+                        <label className="h-9 px-3.5 sm:px-4 rounded-lg bg-white hover:bg-blue-50/60 hover:text-blue-700 hover:border-blue-300 border border-slate-200 text-slate-800 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-colors cursor-pointer shadow-xs shrink-0 whitespace-nowrap">
                           <Upload className="w-4 h-4 text-blue-600" />
                           <span>{isFr ? "Choisir un fichier" : "Choose File"}</span>
                           <input
@@ -1517,179 +1524,226 @@ function PassportApplicationContent() {
               )}
 
               {/* ============================================================== */}
-              {/* STEP 3: REVIEW & SUBMIT                                        */}
+              {/* STEP 3: REVIEW & SUBMIT (CLEAN FORM STYLE, NO BULKY CARDS)   */}
               {/* ============================================================== */}
               {currentStep === 3 && (
                 <div className="space-y-6">
-                  <div className="space-y-1">
+                  <div className="pb-3 border-b border-slate-200">
                     <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900">
                       {isFr ? "Vérification Complète du Dossier" : "Complete Application Review"}
                     </h2>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 mt-0.5">
                       {isFr
                         ? "Vérifiez attentivement les informations ci-dessous avant la soumission définitive."
                         : "Carefully verify the information below before final submission."}
                     </p>
                   </div>
 
-                  {/* Review Summary Grid */}
-                  <div className="bg-slate-50 rounded-2xl border border-slate-200 p-6 space-y-5">
-                    {/* Top Row: Photo + Citizen Name */}
-                    <div className="flex items-center gap-4 pb-4 border-b border-slate-200/80">
-                      {photoDataUrl ? (
-                        <img
-                          src={photoDataUrl}
-                          alt="Citizen"
-                          className="w-16 h-20 object-cover rounded-lg border-2 border-blue-600 bg-white shadow-xs"
-                        />
-                      ) : (
-                        <div className="w-16 h-20 bg-slate-200 rounded-lg flex items-center justify-center text-slate-400">
-                          <User className="w-8 h-8" />
-                        </div>
-                      )}
+                  {/* 1. Applicant Identity Form Row */}
+                  <div className="flex items-start gap-4 sm:gap-6 pb-6 border-b border-slate-200">
+                    {photoDataUrl ? (
+                      <img
+                        src={photoDataUrl}
+                        alt="Citizen"
+                        className="w-16 h-20 sm:w-20 sm:h-24 object-cover rounded-xl border border-slate-300 bg-slate-100 shadow-2xs shrink-0"
+                      />
+                    ) : (
+                      <div className="w-16 h-20 sm:w-20 sm:h-24 bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 shrink-0">
+                        <User className="w-8 h-8" />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
                       <div>
-                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-                          {isFr ? "Demandeur officiel" : "Official Applicant"}
+                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                          {isFr ? "Nom & Post-nom" : "Full Name"}
                         </span>
-                        <h3 className="text-base sm:text-lg font-bold text-slate-950">
+                        <span className="text-sm font-bold text-slate-900 block mt-0.5">
                           {surname} {postName} {firstName}
-                        </h3>
-                        <p className="text-xs text-slate-600 font-medium mt-0.5">
-                          {gender === "M" ? (isFr ? "Masculin" : "Male") : (isFr ? "Féminin" : "Female")} • {birthDate} • {birthCity}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Parents' Lineage Review */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pb-4 border-b border-slate-200/80">
-                      <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 space-y-1">
-                        <span className="text-[11px] font-bold text-blue-900 block">
-                          {isFr ? "Père" : "Father"}
                         </span>
-                        <div className="font-semibold text-slate-900">{fatherFullName || "—"}</div>
-                        <div className="text-slate-500 text-[11px]">
-                          {isFr ? "Nationalité :" : "Nationality:"} {fatherNationality}
-                        </div>
                       </div>
-
-                      <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 space-y-1">
-                        <span className="text-[11px] font-bold text-blue-900 block">
-                          {isFr ? "Mère" : "Mother"}
+                      <div>
+                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                          {isFr ? "Sexe & Date de Naissance" : "Gender & Birth Date"}
                         </span>
-                        <div className="font-semibold text-slate-900">{motherFullName || "—"}</div>
-                        <div className="text-slate-500 text-[11px]">
-                          {isFr ? "Nationalité :" : "Nationality:"} {motherNationality}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Origin, Residence & Collection Hub */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pb-4 border-b border-slate-200/80">
-                      <div className="space-y-1">
-                        <span className="text-[11px] font-bold text-slate-700 block">
-                          {isFr ? "Origine & Contact" : "Origin & Contact"}
+                        <span className="text-sm font-medium text-slate-800 block mt-0.5">
+                          {gender === "M" ? (isFr ? "Masculin" : "Male") : (isFr ? "Féminin" : "Female")} • {birthDate}
                         </span>
-                        <p className="text-slate-600 font-medium">
-                          {originProvince} — {originTerritory}
-                        </p>
-                        <p className="text-slate-600 font-mono">{phone} • {email}</p>
                       </div>
-
-                      <div className="space-y-1">
-                        <span className="text-[11px] font-bold text-slate-700 block">
-                          {isFr ? "Résidence & Centre Consulaire" : "Residence & Consular Hub"}
+                      <div>
+                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                          {isFr ? "Lieu de Naissance" : "Place of Birth"}
                         </span>
-                        <p className="text-slate-600">{residenceAddress}, {residenceCity}</p>
-                        <p className="text-blue-700 font-semibold mt-0.5">{collectionPoint}</p>
+                        <span className="text-sm font-medium text-slate-800 block mt-0.5">
+                          {birthCity}, {birthCountry}
+                        </span>
                       </div>
-                    </div>
-
-                    {/* Attached Documents */}
-                    <div className="space-y-2 text-xs">
-                      <span className="text-[11px] font-bold text-slate-700 block uppercase tracking-wider">
-                        {isFr ? "Documents joints vérifiés :" : "Verified Attached Documents:"}
-                      </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        <div className="bg-blue-50/50 border border-blue-200/80 rounded-xl p-2.5 flex items-center justify-between text-[11px]">
-                          <div className="flex items-center gap-2 overflow-hidden">
-                            <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-[10px] shrink-0">1</span>
-                            <span className="truncate text-slate-800 font-medium">
-                              {photoFileName || "photo_oaci.jpg"}
-                            </span>
-                          </div>
-                          <span className="text-blue-700 font-semibold flex items-center gap-1 shrink-0 ml-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
-                            {isFr ? "Photo OACI" : "Photo"}
-                          </span>
-                        </div>
-
-                        <div className="bg-blue-50/50 border border-blue-200/80 rounded-xl p-2.5 flex items-center justify-between text-[11px]">
-                          <div className="flex items-center gap-2 overflow-hidden">
-                            <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-[10px] shrink-0">2</span>
-                            <span className="truncate text-slate-800 font-medium">
-                              {birthCertDoc || "acte_naissance.pdf"}
-                            </span>
-                          </div>
-                          <span className="text-blue-700 font-semibold flex items-center gap-1 shrink-0 ml-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
-                            {isFr ? "Naissance" : "Birth"}
-                          </span>
-                        </div>
-
-                        <div className="bg-blue-50/50 border border-blue-200/80 rounded-xl p-2.5 flex items-center justify-between text-[11px]">
-                          <div className="flex items-center gap-2 overflow-hidden">
-                            <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-[10px] shrink-0">3</span>
-                            <span className="truncate text-slate-800 font-medium">
-                              {nationalityCertDoc || "certificat_nationalite.pdf"}
-                            </span>
-                          </div>
-                          <span className="text-blue-700 font-semibold flex items-center gap-1 shrink-0 ml-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
-                            {isFr ? "Nationalité" : "Nationality"}
-                          </span>
-                        </div>
-
-                        <div className="bg-blue-50/50 border border-blue-200/80 rounded-xl p-2.5 flex items-center justify-between text-[11px]">
-                          <div className="flex items-center gap-2 overflow-hidden">
-                            <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-[10px] shrink-0">4</span>
-                            <span className="truncate text-slate-800 font-medium">
-                              {identityCardDoc || "carte_identite.pdf"}
-                            </span>
-                          </div>
-                          <span className="text-blue-700 font-semibold flex items-center gap-1 shrink-0 ml-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
-                            {isFr ? "Identité" : "Identity"}
-                          </span>
-                        </div>
-
-                        <div className="bg-blue-50/50 border border-blue-200/80 rounded-xl p-2.5 flex items-center justify-between text-[11px] sm:col-span-2">
-                          <div className="flex items-center gap-2 overflow-hidden">
-                            <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-[10px] shrink-0">5</span>
-                            <span className="truncate text-slate-800 font-medium">
-                              {residenceDoc || "certificat_residence.pdf"}
-                            </span>
-                          </div>
-                          <span className="text-blue-700 font-semibold flex items-center gap-1 shrink-0 ml-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
-                            {isFr ? "Résidence / Casier" : "Residence / Police"}
-                          </span>
-                        </div>
+                      <div>
+                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                          {isFr ? "État Civil" : "Marital Status"}
+                        </span>
+                        <span className="text-sm font-medium text-slate-800 block mt-0.5">
+                          {maritalStatus}
+                        </span>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                          {isFr ? "Profession" : "Profession / Occupation"}
+                        </span>
+                        <span className="text-sm font-medium text-slate-800 block mt-0.5">
+                          {occupation || "—"}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Declaration on Honour Checkbox */}
-                  <label className="flex items-start gap-3 p-4 rounded-xl bg-blue-50/70 border border-blue-200 cursor-pointer">
+                  {/* 2. Parents' Lineage (Clean Form Layout) */}
+                  <div className="pb-6 border-b border-slate-200 space-y-3">
+                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                      {isFr ? "Filiation Parentale" : "Parental Lineage"}
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-0.5">
+                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                          {isFr ? "Père" : "Father"}
+                        </span>
+                        <p className="text-sm font-semibold text-slate-900">{fatherFullName || "—"}</p>
+                        <p className="text-xs text-slate-500">
+                          {isFr ? "Nationalité :" : "Nationality:"} {fatherNationality}
+                        </p>
+                      </div>
+                      <div className="space-y-0.5">
+                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                          {isFr ? "Mère" : "Mother"}
+                        </span>
+                        <p className="text-sm font-semibold text-slate-900">{motherFullName || "—"}</p>
+                        <p className="text-xs text-slate-500">
+                          {isFr ? "Nationalité :" : "Nationality:"} {motherNationality}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. Origin, Residence & Consular Hub */}
+                  <div className="pb-6 border-b border-slate-200 space-y-3">
+                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                      {isFr ? "Origine, Résidence & Centre de Retrait" : "Origin, Residence & Consular Hub"}
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-0.5">
+                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                          {isFr ? "Origine Territoriale" : "Territorial Origin"}
+                        </span>
+                        <p className="text-sm font-medium text-slate-900">
+                          {originProvince} — {originTerritory || "Centre"}
+                        </p>
+                        <p className="text-xs text-slate-500 font-mono mt-1">
+                          {phone} • {email}
+                        </p>
+                      </div>
+                      <div className="space-y-0.5">
+                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                          {isFr ? "Adresse & Centre Consulaire Choisi" : "Address & Selected Consular Hub"}
+                        </span>
+                        <p className="text-sm font-medium text-slate-900">
+                          {residenceAddress}, {residenceCity}
+                        </p>
+                        <p className="text-xs font-semibold text-slate-700 mt-1">
+                          {collectionPoint}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4. Verified Attached Documents - Simple Clean Gray Only (NO CARDS, NO BLUE) */}
+                  <div className="space-y-3 pb-6 border-b border-slate-200">
+                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                      {isFr ? "Documents joints vérifiés :" : "Verified Attached Documents:"}
+                    </span>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between py-2 border-b border-slate-100 text-xs">
+                        <div className="flex items-center gap-2.5 overflow-hidden">
+                          <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-[10px] shrink-0">
+                            1
+                          </span>
+                          <span className="font-medium truncate text-slate-800">
+                            {photoFileName || "photo_oaci.jpg"}
+                          </span>
+                        </div>
+                        <span className="text-slate-400 text-xs font-medium shrink-0 ml-3">
+                          {isFr ? "Photo d'Identité OACI" : "Identity Photo"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between py-2 border-b border-slate-100 text-xs">
+                        <div className="flex items-center gap-2.5 overflow-hidden">
+                          <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-[10px] shrink-0">
+                            2
+                          </span>
+                          <span className="font-medium truncate text-slate-800">
+                            {birthCertDoc || "acte_naissance.pdf"}
+                          </span>
+                        </div>
+                        <span className="text-slate-400 text-xs font-medium shrink-0 ml-3">
+                          {isFr ? "Acte de Naissance" : "Birth Certificate"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between py-2 border-b border-slate-100 text-xs">
+                        <div className="flex items-center gap-2.5 overflow-hidden">
+                          <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-[10px] shrink-0">
+                            3
+                          </span>
+                          <span className="font-medium truncate text-slate-800">
+                            {nationalityCertDoc || "certificat_nationalite.pdf"}
+                          </span>
+                        </div>
+                        <span className="text-slate-400 text-xs font-medium shrink-0 ml-3">
+                          {isFr ? "Certificat de Nationalité" : "Nationality Certificate"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between py-2 border-b border-slate-100 text-xs">
+                        <div className="flex items-center gap-2.5 overflow-hidden">
+                          <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-[10px] shrink-0">
+                            4
+                          </span>
+                          <span className="font-medium truncate text-slate-800">
+                            {identityCardDoc || "carte_identite.pdf"}
+                          </span>
+                        </div>
+                        <span className="text-slate-400 text-xs font-medium shrink-0 ml-3">
+                          {isFr ? "Carte d'Identité / Attestation" : "Identity Document"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between py-2 border-b border-slate-100 text-xs">
+                        <div className="flex items-center gap-2.5 overflow-hidden">
+                          <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-[10px] shrink-0">
+                            5
+                          </span>
+                          <span className="font-medium truncate text-slate-800">
+                            {residenceDoc || "certificat_residence.pdf"}
+                          </span>
+                        </div>
+                        <span className="text-slate-400 text-xs font-medium shrink-0 ml-3">
+                          {isFr ? "Certificat de Résidence / Casier" : "Residence / Police Clearance"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 5. Declaration on Honour - Clean Simple Gray (NO BLUE CONTAINER) */}
+                  <label className="flex items-start gap-3 pt-1 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={declarationAgreed}
                       onChange={(e) => setDeclarationAgreed(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+                      className="mt-0.5 w-4 h-4 text-slate-800 rounded border-slate-300 focus:ring-slate-400 cursor-pointer"
                     />
-                    <span className="text-xs text-slate-800 leading-relaxed font-medium">
+                    <span className="text-xs text-slate-600 leading-relaxed">
                       {isFr
-                        ? "Je certifie sur l'honneur l'exactitude de toutes les informations ci-dessus (identité civile, filiation des parents, nationalité et pièces jointes). Je confirme la soumission de ma demande de passeport."
-                        : "I solemnly declare on my honour that all information above (civil identity, parents' lineage, nationality, and attachments) is exact and true. I confirm the submission of my passport application."}
+                        ? "Je certifie sur l'honneur l'exactitude de toutes les informations ci-dessus concernant l'identité civile, la filiation des parents, la nationalité et les pièces jointes. Je confirme la soumission de ma demande de passeport."
+                        : "I solemnly declare on my honour that all information above concerning civil identity, parents' lineage, nationality, and attachments is exact and true. I confirm the submission of my passport application."}
                     </span>
                   </label>
 
@@ -1731,8 +1785,8 @@ function PassportApplicationContent() {
             /* OFFICIAL SUBMISSION RECEIPT                                    */
             /* ============================================================== */
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-10 space-y-6 text-center">
-              <div className="w-14 h-14 rounded-full bg-blue-50 border-2 border-blue-600 text-blue-600 flex items-center justify-center mx-auto shadow-xs no-print">
-                <CheckCircle2 className="w-8 h-8" />
+              <div className="flex justify-center no-print">
+                <AnimatedCheckmark size={64} />
               </div>
 
               <div className="space-y-1 no-print">
@@ -1834,13 +1888,6 @@ function PassportApplicationContent() {
                     <span className="text-slate-500">{isFr ? "Province d'origine :" : "Province of Origin:"}</span>
                     <span className="font-medium text-slate-900 text-right">{originProvince} ({originTerritory || "Centre"})</span>
                   </div>
-                </div>
-
-                <div className="mt-3 pt-3 border-t border-slate-200 text-[11px] text-slate-500 leading-relaxed bg-slate-50 p-3 rounded-xl">
-                  <strong>{isFr ? "Prochaine étape :" : "Next step:"}</strong>{" "}
-                  {isFr
-                    ? "Présentez ce récépissé officiel au Centre d'Enrôlement choisi, accompagné de vos originaux pour la capture biométrique physique (empreintes & iris) et le retrait du livret de passeport."
-                    : "Present this official receipt at your selected Consular Hub along with your original documents for physical biometric enrollment (fingerprints & iris) and passport pickup."}
                 </div>
               </div>
 

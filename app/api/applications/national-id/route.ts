@@ -218,3 +218,93 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const {
+      trackingId,
+      status, // "approved", "ready", "rejected"
+      officerName = "Chef de Service CNI",
+      notesFr,
+      notesEn,
+      nationalIdNumber: customNIN,
+    } = body;
+
+    if (!trackingId || !status) {
+      return NextResponse.json(
+        { error: "trackingId and status are mandatory." },
+        { status: 400 }
+      );
+    }
+
+    const trackingIdHash = hashSHA256(trackingId.trim());
+
+    // Generate and encrypt official National ID Number (NIN-CD-YYYY-XXXXXXX) if approved
+    let encryptedNIN = null;
+    let ninHash = null;
+
+    if (status === "approved" || status === "ready") {
+      const generatedNIN =
+        customNIN ||
+        `NIN-CD-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
+      encryptedNIN = encryptAES256(generatedNIN);
+      ninHash = hashSHA256(generatedNIN);
+    }
+
+    const updateSql = `
+      UPDATE national_id_applications
+      SET
+        status = $1,
+        status_notes_fr = COALESCE($2, status_notes_fr),
+        status_notes_en = COALESCE($3, status_notes_en),
+        national_id_number = COALESCE($4, national_id_number),
+        national_id_hash = COALESCE($5, national_id_hash),
+        approved_at = CASE WHEN $1 IN ('approved', 'ready') THEN CURRENT_TIMESTAMP ELSE approved_at END,
+        approved_by = CASE WHEN $1 IN ('approved', 'ready') THEN $6 ELSE approved_by END,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE tracking_id_hash = $7
+      RETURNING *;
+    `;
+
+    const values = [
+      status,
+      notesFr ||
+        (status === "approved"
+          ? "Dossier approuvé par le Chef de Service. Carte CNI produite et transmise au centre de distribution."
+          : null),
+      notesEn ||
+        (status === "approved"
+          ? "Dossier approved by Head of Service. National ID produced and routed to distribution center."
+          : null),
+      encryptedNIN,
+      ninHash,
+      officerName,
+      trackingIdHash,
+    ];
+
+    const result = await query(updateSql, values);
+
+    if (result.rows.length === 0) {
+      return NextResponse.json(
+        { error: "Demande CNI introuvable." },
+        { status: 404 }
+      );
+    }
+
+    const updatedApp = formatApplicationRow(result.rows[0]);
+
+    return NextResponse.json({
+      success: true,
+      message: `Statut CNI mis à jour (${status}) et numéro NIN chiffré enregistré.`,
+      application: updatedApp,
+    });
+  } catch (error: unknown) {
+    console.error("Erreur lors de la mise à jour CNI:", error);
+    const errMsg = error instanceof Error ? error.message : "Erreur interne";
+    return NextResponse.json(
+      { error: "Impossible de mettre à jour la demande CNI", details: errMsg },
+      { status: 500 }
+    );
+  }
+}

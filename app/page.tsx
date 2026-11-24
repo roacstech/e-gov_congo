@@ -406,6 +406,12 @@ export default function Home() {
                         onClick={() => {
                           if (item.service.id === "cni-biometrique") {
                             router.push("/services/national-id");
+                          } else if (item.service.id === "passeport-ordinaire") {
+                            router.push("/services/passport");
+                          } else if (item.service.id === "certificat-nationalite") {
+                            router.push("/services/nationality-certificate");
+                          } else if (item.service.id === "acte-naissance") {
+                            router.push("/services/birth-certificate");
                           } else {
                             router.push(`/services/${item.service.id}`);
                           }
@@ -446,6 +452,12 @@ export default function Home() {
                         onClick={() => {
                           if (item.service.id === "cni-biometrique") {
                             router.push("/services/national-id");
+                          } else if (item.service.id === "passeport-ordinaire") {
+                            router.push("/services/passport");
+                          } else if (item.service.id === "certificat-nationalite") {
+                            router.push("/services/nationality-certificate");
+                          } else if (item.service.id === "acte-naissance") {
+                            router.push("/services/birth-certificate");
                           } else {
                             router.push(`/services/${item.service.id}`);
                           }
@@ -459,6 +471,12 @@ export default function Home() {
                         onClick={() => {
                           if (item.service.id === "cni-biometrique") {
                             router.push("/services/national-id");
+                          } else if (item.service.id === "passeport-ordinaire") {
+                            router.push("/services/passport");
+                          } else if (item.service.id === "certificat-nationalite") {
+                            router.push("/services/nationality-certificate");
+                          } else if (item.service.id === "acte-naissance") {
+                            router.push("/services/birth-certificate");
                           } else {
                             router.push(`/services/${item.service.id}`);
                           }

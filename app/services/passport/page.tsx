@@ -33,6 +33,8 @@ import {
   Upload,
   Building2,
   Sparkles,
+  ShieldCheck,
+  Loader2,
 } from "lucide-react";
 
 const PASSPORT_SERVICE = SERVICES_DATA[1]; // "passeport-ordinaire"
@@ -764,10 +766,13 @@ function PassportApplicationContent() {
               </div>
 
               {/* 3-Step Connected Progress Stepper */}
-              <div className="w-full max-w-2xl mx-auto pt-2 pb-6">
-                <div className="relative flex items-center justify-between">
-                  {/* Continuous horizontal connecting track */}
-                  <div className="absolute left-8 right-8 top-5 -translate-y-1/2 h-[2px] bg-slate-200 z-0">
+              <div className="w-full max-w-xl mx-auto pt-2 pb-6">
+                <div className="relative">
+                  {/* Continuous horizontal connecting track between step circle centers */}
+                  <div
+                    className="absolute top-5 -translate-y-1/2 h-[2px] bg-slate-200 z-0"
+                    style={{ left: "16.666%", right: "16.666%" }}
+                  >
                     <div
                       className="h-full bg-blue-600 transition-all duration-300"
                       style={{
@@ -776,78 +781,81 @@ function PassportApplicationContent() {
                     />
                   </div>
 
-                  {/* Step 1 Node */}
-                  <div className="relative z-10 flex flex-col items-center">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                        currentStep === 1
-                          ? "bg-blue-600 text-white ring-4 ring-blue-500/25 border-2 border-white shadow-xs"
-                          : currentStep > 1
-                          ? "bg-blue-600 text-white"
-                          : "bg-white border-2 border-slate-300 text-slate-400"
-                      }`}
-                    >
-                      {currentStep > 1 ? <Check className="w-4 h-4 stroke-[3]" /> : "1"}
+                  {/* 3 Step Nodes in Balanced Grid */}
+                  <div className="grid grid-cols-3 relative z-10">
+                    {/* Step 1 Node */}
+                    <div className="flex flex-col items-center text-center">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                          currentStep === 1
+                            ? "bg-blue-600 text-white ring-4 ring-blue-500/25 border-2 border-white shadow-xs"
+                            : currentStep > 1
+                            ? "bg-blue-600 text-white"
+                            : "bg-white border-2 border-slate-300 text-slate-400"
+                        }`}
+                      >
+                        {currentStep > 1 ? <Check className="w-4 h-4 stroke-[3]" /> : "1"}
+                      </div>
+                      <span
+                        className={`mt-2 text-xs sm:text-sm tracking-tight text-center ${
+                          currentStep === 1
+                            ? "text-slate-900 font-bold"
+                            : currentStep > 1
+                            ? "text-slate-700 font-semibold"
+                            : "text-slate-400 font-medium"
+                        }`}
+                      >
+                        {isFr ? "Identité Personnelle" : "Personal Identity"}
+                      </span>
                     </div>
-                    <span
-                      className={`mt-2 text-xs sm:text-sm tracking-tight text-center ${
-                        currentStep === 1
-                          ? "text-slate-900 font-bold"
-                          : currentStep > 1
-                          ? "text-slate-700 font-semibold"
-                          : "text-slate-400 font-medium"
-                      }`}
-                    >
-                      {isFr ? "Identité Personnelle" : "Personal Identity"}
-                    </span>
-                  </div>
 
-                  {/* Step 2 Node */}
-                  <div className="relative z-10 flex flex-col items-center">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                        currentStep === 2
-                          ? "bg-blue-600 text-white ring-4 ring-blue-500/25 border-2 border-white shadow-xs"
-                          : currentStep > 2
-                          ? "bg-blue-600 text-white"
-                          : "bg-white border-2 border-slate-300 text-slate-400"
-                      }`}
-                    >
-                      {currentStep > 2 ? <Check className="w-4 h-4 stroke-[3]" /> : "2"}
+                    {/* Step 2 Node */}
+                    <div className="flex flex-col items-center text-center">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                          currentStep === 2
+                            ? "bg-blue-600 text-white ring-4 ring-blue-500/25 border-2 border-white shadow-xs"
+                            : currentStep > 2
+                            ? "bg-blue-600 text-white"
+                            : "bg-white border-2 border-slate-300 text-slate-400"
+                        }`}
+                      >
+                        {currentStep > 2 ? <Check className="w-4 h-4 stroke-[3]" /> : "2"}
+                      </div>
+                      <span
+                        className={`mt-2 text-xs sm:text-sm tracking-tight text-center ${
+                          currentStep === 2
+                            ? "text-slate-900 font-bold"
+                            : currentStep > 2
+                            ? "text-slate-700 font-semibold"
+                            : "text-slate-400 font-medium"
+                        }`}
+                      >
+                        {isFr ? "Pièces Justificatives" : "Supporting Documents"}
+                      </span>
                     </div>
-                    <span
-                      className={`mt-2 text-xs sm:text-sm tracking-tight text-center ${
-                        currentStep === 2
-                          ? "text-slate-900 font-bold"
-                          : currentStep > 2
-                          ? "text-slate-700 font-semibold"
-                          : "text-slate-400 font-medium"
-                      }`}
-                    >
-                      {isFr ? "Pièces Justificatives" : "Supporting Documents"}
-                    </span>
-                  </div>
 
-                  {/* Step 3 Node */}
-                  <div className="relative z-10 flex flex-col items-center">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                        currentStep === 3
-                          ? "bg-blue-600 text-white ring-4 ring-blue-500/25 border-2 border-white shadow-xs"
-                          : "bg-white border-2 border-slate-300 text-slate-400"
-                      }`}
-                    >
-                      3
+                    {/* Step 3 Node */}
+                    <div className="flex flex-col items-center text-center">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                          currentStep === 3
+                            ? "bg-blue-600 text-white ring-4 ring-blue-500/25 border-2 border-white shadow-xs"
+                            : "bg-white border-2 border-slate-300 text-slate-400"
+                        }`}
+                      >
+                        3
+                      </div>
+                      <span
+                        className={`mt-2 text-xs sm:text-sm tracking-tight text-center ${
+                          currentStep === 3
+                            ? "text-slate-900 font-bold"
+                            : "text-slate-400 font-medium"
+                        }`}
+                      >
+                        {isFr ? "Vérification & Soumission" : "Review & Submit"}
+                      </span>
                     </div>
-                    <span
-                      className={`mt-2 text-xs sm:text-sm tracking-tight text-center ${
-                        currentStep === 3
-                          ? "text-slate-900 font-bold"
-                          : "text-slate-400 font-medium"
-                      }`}
-                    >
-                      {isFr ? "Vérification & Soumission" : "Review & Submit"}
-                    </span>
                   </div>
                 </div>
               </div>
@@ -1226,7 +1234,7 @@ function PassportApplicationContent() {
                       onClick={handleProceedToStep2}
                       className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm transition-colors cursor-pointer flex items-center gap-2 shadow-xs"
                     >
-                      <span>{isFr ? "Continuer vers les Pièces Jointes" : "Continue to Documents"}</span>
+                      <span>{isFr ? "Étape suivante" : "Next Step"}</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -1516,7 +1524,7 @@ function PassportApplicationContent() {
                       onClick={handleProceedToStep3}
                       className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm transition-colors cursor-pointer flex items-center gap-2 shadow-xs"
                     >
-                      <span>{isFr ? "Vérifier le Dossier" : "Review Application"}</span>
+                      <span>{isFr ? "Étape suivante" : "Next Step"}</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -1765,14 +1773,17 @@ function PassportApplicationContent() {
                       type="button"
                       onClick={handleFinalSubmit}
                       disabled={isSubmitting}
-                      className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold text-xs sm:text-sm transition-colors cursor-pointer flex items-center gap-2 shadow-xs"
+                      className="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold text-xs sm:text-sm transition-colors cursor-pointer flex items-center gap-2 shadow-sm"
                     >
                       {isSubmitting ? (
-                        <span>{isFr ? "Enregistrement en cours..." : "Submitting..."}</span>
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>{isFr ? "Envoi en cours..." : "Submitting..."}</span>
+                        </>
                       ) : (
                         <>
-                          <Globe className="w-4 h-4" />
-                          <span>{isFr ? "Soumettre la demande de passeport" : "Submit Passport Application"}</span>
+                          <ShieldCheck className="w-4 h-4" />
+                          <span>{isFr ? "Soumettre la Demande" : "Submit Application"}</span>
                         </>
                       )}
                     </button>
@@ -1899,7 +1910,7 @@ function PassportApplicationContent() {
                   className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-xs"
                 >
                   <Printer className="w-4 h-4" />
-                  <span>{isFr ? "Imprimer le récépissé officiel" : "Print Official Receipt"}</span>
+                  <span>{isFr ? "Imprimer le Récépissé" : "Print Receipt"}</span>
                 </button>
 
                 <button
@@ -1924,7 +1935,7 @@ function PassportApplicationContent() {
                   className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs sm:text-sm font-semibold transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-xs"
                 >
                   <RotateCcw className="w-4 h-4 text-slate-500" />
-                  <span>{isFr ? "Nouvelle demande" : "New Application"}</span>
+                  <span>{isFr ? "Nouvelle Demande" : "New Application"}</span>
                 </button>
               </div>
             </div>

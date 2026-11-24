@@ -612,10 +612,16 @@ export default function ServicesPage() {
                     viewMode="grid"
                     onSelect={(srv) => {
                       if (srv.id === "cni-biometrique") router.push("/services/national-id");
+                      else if (srv.id === "passeport-ordinaire") router.push("/services/passport");
+                      else if (srv.id === "certificat-nationalite") router.push("/services/nationality-certificate");
+                      else if (srv.id === "acte-naissance") router.push("/services/birth-certificate");
                       else router.push(`/services/${srv.id}`);
                     }}
                     onApply={(srv) => {
                       if (srv.id === "cni-biometrique") router.push("/services/national-id");
+                      else if (srv.id === "passeport-ordinaire") router.push("/services/passport");
+                      else if (srv.id === "certificat-nationalite") router.push("/services/nationality-certificate");
+                      else if (srv.id === "acte-naissance") router.push("/services/birth-certificate");
                       else router.push(`/services/${srv.id}`);
                     }}
                   />
@@ -631,10 +637,16 @@ export default function ServicesPage() {
                     viewMode="list"
                     onSelect={(srv) => {
                       if (srv.id === "cni-biometrique") router.push("/services/national-id");
+                      else if (srv.id === "passeport-ordinaire") router.push("/services/passport");
+                      else if (srv.id === "certificat-nationalite") router.push("/services/nationality-certificate");
+                      else if (srv.id === "acte-naissance") router.push("/services/birth-certificate");
                       else router.push(`/services/${srv.id}`);
                     }}
                     onApply={(srv) => {
                       if (srv.id === "cni-biometrique") router.push("/services/national-id");
+                      else if (srv.id === "passeport-ordinaire") router.push("/services/passport");
+                      else if (srv.id === "certificat-nationalite") router.push("/services/nationality-certificate");
+                      else if (srv.id === "acte-naissance") router.push("/services/birth-certificate");
                       else router.push(`/services/${srv.id}`);
                     }}
                   />

@@ -617,6 +617,7 @@ export default function ServicesPage() {
                       else if (srv.id === "acte-naissance") router.push("/services/birth-certificate");
                       else if (srv.id === "acte-mariage") router.push("/services/marriage-certificate");
                       else if (srv.id === "acte-deces") router.push("/services/death-certificate");
+                      else if (srv.id === "permis-conduire") router.push("/services/driving-license");
                       else router.push(`/services/${srv.id}`);
                     }}
                     onApply={(srv) => {
@@ -626,6 +627,7 @@ export default function ServicesPage() {
                       else if (srv.id === "acte-naissance") router.push("/services/birth-certificate");
                       else if (srv.id === "acte-mariage") router.push("/services/marriage-certificate");
                       else if (srv.id === "acte-deces") router.push("/services/death-certificate");
+                      else if (srv.id === "permis-conduire") router.push("/services/driving-license");
                       else router.push(`/services/${srv.id}`);
                     }}
                   />
@@ -646,6 +648,7 @@ export default function ServicesPage() {
                       else if (srv.id === "acte-naissance") router.push("/services/birth-certificate");
                       else if (srv.id === "acte-mariage") router.push("/services/marriage-certificate");
                       else if (srv.id === "acte-deces") router.push("/services/death-certificate");
+                      else if (srv.id === "permis-conduire") router.push("/services/driving-license");
                       else router.push(`/services/${srv.id}`);
                     }}
                     onApply={(srv) => {
@@ -655,6 +658,7 @@ export default function ServicesPage() {
                       else if (srv.id === "acte-naissance") router.push("/services/birth-certificate");
                       else if (srv.id === "acte-mariage") router.push("/services/marriage-certificate");
                       else if (srv.id === "acte-deces") router.push("/services/death-certificate");
+                      else if (srv.id === "permis-conduire") router.push("/services/driving-license");
                       else router.push(`/services/${srv.id}`);
                     }}
                   />

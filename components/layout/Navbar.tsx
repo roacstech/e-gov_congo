@@ -221,6 +221,8 @@ export const Navbar: React.FC<NavbarProps> = ({
       router.push("/services/marriage-certificate");
     } else if (service.id === "acte-deces") {
       router.push("/services/death-certificate");
+    } else if (service.id === "permis-conduire") {
+      router.push("/services/driving-license");
     } else {
       router.push(`/services/${service.id}`);
     }

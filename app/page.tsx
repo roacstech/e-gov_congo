@@ -414,6 +414,8 @@ export default function Home() {
                             router.push("/services/birth-certificate");
                           } else if (item.service.id === "acte-mariage") {
                             router.push("/services/marriage-certificate");
+                          } else if (item.service.id === "acte-deces") {
+                            router.push("/services/death-certificate");
                           } else {
                             router.push(`/services/${item.service.id}`);
                           }
@@ -462,6 +464,8 @@ export default function Home() {
                             router.push("/services/birth-certificate");
                           } else if (item.service.id === "acte-mariage") {
                             router.push("/services/marriage-certificate");
+                          } else if (item.service.id === "acte-deces") {
+                            router.push("/services/death-certificate");
                           } else {
                             router.push(`/services/${item.service.id}`);
                           }
@@ -483,6 +487,8 @@ export default function Home() {
                             router.push("/services/birth-certificate");
                           } else if (item.service.id === "acte-mariage") {
                             router.push("/services/marriage-certificate");
+                          } else if (item.service.id === "acte-deces") {
+                            router.push("/services/death-certificate");
                           } else {
                             router.push(`/services/${item.service.id}`);
                           }

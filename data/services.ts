@@ -318,8 +318,8 @@ export const SERVICES_DATA: ServiceItem[] = [
       "Identity document of deceased and declarant",
       "Proof of family relationship or legal authorization"
     ],
-    isOnlineAvailable: false,
-    popular: false,
+    isOnlineAvailable: true,
+    popular: true,
   },
   {
     id: "jugement-suppletif",
@@ -345,8 +345,8 @@ export const SERVICES_DATA: ServiceItem[] = [
       "Testimony of two reliable witnesses",
       "Certificate of non-registration from municipal registrar"
     ],
-    isOnlineAvailable: false,
-    popular: false,
+    isOnlineAvailable: true,
+    popular: true,
   },
 ];
 

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { CitizenApplication, Language } from "../../types";
-import { X, UserCheck, CheckCircle2, Clock, Filter, Eye, Shield, Check } from "lucide-react";
+import { X, Shield } from "lucide-react";
 
 interface OfficerPortalModalProps {
   isOpen: boolean;
@@ -19,13 +19,14 @@ export const OfficerPortalModal: React.FC<OfficerPortalModalProps> = ({
   onClose,
   onUpdateStatus,
 }) => {
-  if (!isOpen) return null;
   const isFr = language === "fr";
 
   const [selectedApp, setSelectedApp] = useState<CitizenApplication | null>(
     applications[0] || null
   );
   const [officerNote, setOfficerNote] = useState("");
+
+  if (!isOpen) return null;
 
   const handleStatusChange = (status: CitizenApplication["status"]) => {
     if (!selectedApp) return;

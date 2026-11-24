@@ -48,6 +48,11 @@ button:focus-visible {
 
 /* Print view optimization for administrative receipts */
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 12mm;
+  }
+
   header,
   footer,
   button,
@@ -55,8 +60,30 @@ button:focus-visible {
     display: none !important;
   }
 
-  body {
+  body, html {
     background: #ffffff !important;
-    color: #000000 !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 11px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  main {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin: 0 !important;
+  }
+
+  .print-clean-page {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    padding: 20px !important;
+    margin: 0 auto !important;
+    max-width: 100% !important;
+    width: 100% !important;
   }
 }

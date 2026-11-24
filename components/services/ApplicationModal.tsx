@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { ServiceItem, Language, CitizenApplication } from "../../types";
-import { X, CheckCircle2, ArrowRight, ArrowLeft, UploadCloud, Copy, Check, FileCheck, Building } from "lucide-react";
+import { X, CheckCircle2, ArrowRight, ArrowLeft, UploadCloud, Copy, Check, FileCheck } from "lucide-react";
 
 interface ApplicationModalProps {
   service: ServiceItem | null;
@@ -31,7 +31,6 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
   onSubmitted,
   onTrackNow,
 }) => {
-  if (!service) return null;
   const isFr = language === "fr";
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -45,6 +44,8 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [generatedApp, setGeneratedApp] = useState<CitizenApplication | null>(null);
   const [hasCopied, setHasCopied] = useState(false);
+
+  if (!service) return null;
 
   const handleSimulatedUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {

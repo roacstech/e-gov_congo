@@ -47,7 +47,7 @@ export interface CitizenApplication {
   status: ApplicationStatus;
   statusNotesFr: string;
   statusNotesEn: string;
-  collectionPoint: string;
+  collectionPoint?: string;
 }
 
 export interface VerifiedDocument {

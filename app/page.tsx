@@ -412,6 +412,8 @@ export default function Home() {
                             router.push("/services/nationality-certificate");
                           } else if (item.service.id === "acte-naissance") {
                             router.push("/services/birth-certificate");
+                          } else if (item.service.id === "acte-mariage") {
+                            router.push("/services/marriage-certificate");
                           } else {
                             router.push(`/services/${item.service.id}`);
                           }
@@ -458,6 +460,8 @@ export default function Home() {
                             router.push("/services/nationality-certificate");
                           } else if (item.service.id === "acte-naissance") {
                             router.push("/services/birth-certificate");
+                          } else if (item.service.id === "acte-mariage") {
+                            router.push("/services/marriage-certificate");
                           } else {
                             router.push(`/services/${item.service.id}`);
                           }
@@ -477,6 +481,8 @@ export default function Home() {
                             router.push("/services/nationality-certificate");
                           } else if (item.service.id === "acte-naissance") {
                             router.push("/services/birth-certificate");
+                          } else if (item.service.id === "acte-mariage") {
+                            router.push("/services/marriage-certificate");
                           } else {
                             router.push(`/services/${item.service.id}`);
                           }

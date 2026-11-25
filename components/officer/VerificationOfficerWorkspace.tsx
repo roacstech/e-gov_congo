@@ -9,6 +9,8 @@ import {
   SupportingDocumentItem,
 } from "@/types";
 import { SignaturePad } from "@/components/officer/SignaturePad";
+import { SignedDocumentAndIdProofViewer } from "@/components/officer/SignedDocumentAndIdProofViewer";
+import { getLocalizedServiceTitle } from "@/data/services";
 import {
   AlertCircle,
   CheckCircle2,
@@ -24,7 +26,7 @@ import {
 
 const ALL_SERVICES_DROPDOWN = [
   { id: "cni-biometrique", fr: "Carte Nationale d'Identité", en: "National Identity Card" },
-  { id: "passeport-ordinaire", fr: "Passeport Ordinaire", en: "Ordinary Passport" },
+  { id: "passeport-ordinaire", fr: "Demande de Passeport", en: "Passport Application" },
   { id: "certificat-nationalite", fr: "Certificat de Nationalité", en: "Nationality Certificate" },
   { id: "acte-naissance", fr: "Acte de Naissance", en: "Birth Certificate" },
   { id: "acte-mariage", fr: "Certificat de Mariage", en: "Marriage Certificate" },
@@ -58,10 +60,11 @@ export const VerificationOfficerWorkspace: React.FC<
   VerificationOfficerWorkspaceProps
 > = ({ language, officer, refreshSignal, openedApp, onSelectApp, onSessionExpired }) => {
   const isFr = language === "fr";
+  const isApprover = officer.roleTier === "approver_officer";
 
   // Server-side query parameters
   const [selectedServiceId, setSelectedServiceId] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "verified">("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -81,11 +84,14 @@ export const VerificationOfficerWorkspace: React.FC<
   const [statusCounts, setStatusCounts] = useState({
     pending: 0,
     verified: 0,
+    pendingApproval: 0,
+    approved: 0,
     all: 0,
   });
 
-  // Active attachment index for side-by-side comparison
+  // Active attachment index & Approver toggle
   const [activeDocIndex, setActiveDocIndex] = useState<number>(0);
+  const [showCompareInstead, setShowCompareInstead] = useState(false);
 
   // Verification & signing state
   const [docsChecked, setDocsChecked] = useState(false);
@@ -171,6 +177,7 @@ export const VerificationOfficerWorkspace: React.FC<
     setRejectionReason("");
     setErrorMsg(null);
     setSuccessMsg(null);
+    setShowCompareInstead(false);
   };
 
   const handleOpenApplication = (app: OfficerApplicationRecord) => {
@@ -178,7 +185,9 @@ export const VerificationOfficerWorkspace: React.FC<
     onSelectApp(app);
   };
 
-  const handleSubmitVerification = async (action: "verify_and_sign" | "reject") => {
+  const handleSubmitAction = async (
+    action: "verify_and_sign" | "check_and_approve" | "reject"
+  ) => {
     if (!openedApp) return;
     setErrorMsg(null);
     setSuccessMsg(null);
@@ -195,6 +204,13 @@ export const VerificationOfficerWorkspace: React.FC<
       if (!signatureData) {
         setErrorMsg(
           isFr ? "Veuillez signer avant de valider." : "Please sign before submitting."
+        );
+        return;
+      }
+    } else if (action === "check_and_approve") {
+      if (!signatureData) {
+        setErrorMsg(
+          isFr ? "Veuillez signer avant d'approuver." : "Please sign before confirming."
         );
         return;
       }
@@ -236,9 +252,15 @@ export const VerificationOfficerWorkspace: React.FC<
 
       if (action === "verify_and_sign") {
         setSuccessMsg(
+          isFr ? "Dossier vérifié et signé." : "Verified and signed."
+        );
+      } else if (action === "check_and_approve") {
+        setShowCompareInstead(false);
+        const docNum = data.application?.issuedNumber || "";
+        setSuccessMsg(
           isFr
-            ? "Dossier vérifié et signé."
-            : "Verified and signed."
+            ? `Approuvé. N° officiel : ${docNum}`
+            : `Approved. Official ID: ${docNum}`
         );
       } else {
         setSuccessMsg(isFr ? "Dossier rejeté." : "Application rejected.");
@@ -256,22 +278,29 @@ export const VerificationOfficerWorkspace: React.FC<
       case "in_review":
         return {
           label: isFr ? "À vérifier" : "Pending Verify",
-          cls: "bg-blue-600 text-white border-blue-600",
+          cls: isApprover
+            ? "bg-gray-100 text-gray-700 border-gray-300"
+            : "bg-blue-600 text-white border-blue-600",
         };
       case "verified":
-        return {
-          label: isFr ? "Vérifié" : "Verified",
-          cls: "bg-emerald-600 text-white border-emerald-600",
-        };
+        return isApprover
+          ? {
+              label: isFr ? "À approuver" : "Pending Approval",
+              cls: "bg-blue-600 text-white border-blue-600",
+            }
+          : {
+              label: isFr ? "Vérifié" : "Verified",
+              cls: "bg-emerald-600 text-white border-emerald-600",
+            };
       case "approved":
         return {
           label: isFr ? "Approuvé" : "Approved",
-          cls: "bg-blue-50 text-blue-700 border-blue-300",
+          cls: "bg-emerald-600 text-white border-emerald-600",
         };
       case "ready":
         return {
           label: isFr ? "Délivré" : "Ready",
-          cls: "bg-emerald-50 text-emerald-800 border-emerald-300",
+          cls: "bg-emerald-600 text-white border-emerald-600",
         };
       case "rejected":
         return {
@@ -709,7 +738,7 @@ export const VerificationOfficerWorkspace: React.FC<
             <select
               value={statusFilter}
               onChange={(e) => {
-                setStatusFilter(e.target.value as "all" | "pending" | "verified");
+                setStatusFilter(e.target.value);
                 setPage(1);
               }}
               className="w-full px-3 py-2 border border-gray-300 bg-white focus:border-gray-500 text-xs font-semibold text-gray-900 cursor-pointer"
@@ -717,12 +746,33 @@ export const VerificationOfficerWorkspace: React.FC<
               <option value="all">
                 {isFr ? `Tous (${statusCounts.all})` : `All (${statusCounts.all})`}
               </option>
-              <option value="pending">
-                {isFr ? `À vérifier (${statusCounts.pending})` : `Pending (${statusCounts.pending})`}
-              </option>
-              <option value="verified">
-                {isFr ? `Vérifiés (${statusCounts.verified})` : `Verified (${statusCounts.verified})`}
-              </option>
+              {isApprover ? (
+                <>
+                  <option value="pending_approval">
+                    {isFr
+                      ? `À approuver (${statusCounts.pendingApproval ?? 0})`
+                      : `Pending (${statusCounts.pendingApproval ?? 0})`}
+                  </option>
+                  <option value="approved">
+                    {isFr
+                      ? `Approuvés (${statusCounts.approved ?? 0})`
+                      : `Approved (${statusCounts.approved ?? 0})`}
+                  </option>
+                </>
+              ) : (
+                <>
+                  <option value="pending">
+                    {isFr
+                      ? `À vérifier (${statusCounts.pending})`
+                      : `Pending (${statusCounts.pending})`}
+                  </option>
+                  <option value="verified">
+                    {isFr
+                      ? `Vérifiés (${statusCounts.verified})`
+                      : `Verified (${statusCounts.verified})`}
+                  </option>
+                </>
+              )}
             </select>
           </div>
         </div>
@@ -801,7 +851,7 @@ export const VerificationOfficerWorkspace: React.FC<
                         </td>
                         <td className="py-3.5 px-4 align-middle">
                           <div className="font-medium text-gray-800">
-                            {app.serviceTitle}
+                            {getLocalizedServiceTitle(app.serviceId, app.serviceTitle, language)}
                           </div>
                           <div className="text-[11px] text-gray-500">
                             {app.serviceCode}
@@ -890,10 +940,14 @@ export const VerificationOfficerWorkspace: React.FC<
   }
 
   /* ====================================================================== */
-  /* VIEW B: SIDE-BY-SIDE COMPARE (LEFT CITIZEN | RIGHT UPLOADED DOC) + SIGN*/
+  /* VIEW B: SIDE-BY-SIDE COMPARE + SIGN (AND GENERATED DOC/ID FOR APPROVER)*/
   /* ====================================================================== */
-  const canVerify =
-    openedApp.status === "submitted" || openedApp.status === "in_review";
+  const canAct = isApprover
+    ? openedApp.status === "verified"
+    : openedApp.status === "submitted" || openedApp.status === "in_review";
+  const isApproverCompleted =
+    isApprover &&
+    (openedApp.status === "approved" || openedApp.status === "ready");
   const activeDoc =
     openedApp.supportingDocuments[activeDocIndex] ||
     openedApp.supportingDocuments[0];
@@ -902,14 +956,22 @@ export const VerificationOfficerWorkspace: React.FC<
     <div>
       {/* Integrated Sub-header */}
       <div className="px-4 py-3 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3 no-print">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="font-mono text-xs font-bold text-blue-700">
             {openedApp.trackingId}
           </span>
           <span className="text-gray-300">&bull;</span>
           <span className="text-xs font-bold text-gray-900">
-            {openedApp.serviceTitle}
+            {getLocalizedServiceTitle(openedApp.serviceId, openedApp.serviceTitle, language)}
           </span>
+          {openedApp.issuedNumber && (
+            <>
+              <span className="text-gray-300">&bull;</span>
+              <span className="font-mono text-xs font-semibold text-emerald-700">
+                {openedApp.issuedNumber}
+              </span>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -920,6 +982,21 @@ export const VerificationOfficerWorkspace: React.FC<
           >
             {getStatusBadge(openedApp.status).label}
           </span>
+          {isApproverCompleted && (
+            <button
+              type="button"
+              onClick={() => setShowCompareInstead((v) => !v)}
+              className="px-3 py-1.5 border border-gray-300 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-medium cursor-pointer"
+            >
+              {showCompareInstead
+                ? isFr
+                  ? "Document & ID Officiels"
+                  : "Official Doc & ID"
+                : isFr
+                ? "Détails du Citoyen"
+                : "Citizen Details"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -946,9 +1023,26 @@ export const VerificationOfficerWorkspace: React.FC<
         </div>
       )}
 
-      {/* SIDE-BY-SIDE 50/50 COMPARISON INSIDE SINGLE UNIFIED CARD */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 lg:divide-x divide-gray-200 border-b border-gray-200">
-            {/* LEFT: CITIZEN DETAILS */}
+      {isApproverCompleted && !showCompareInstead ? (
+        <div className="p-5">
+          <SignedDocumentAndIdProofViewer
+            application={openedApp}
+            language={language}
+            defaultMode="both"
+            showPrintButton={true}
+          />
+        </div>
+      ) : (
+        <>
+          {/* CITIZEN DETAILS (50/50 WITH UPLOADED DOCS FOR VERIFIER, FULL-WIDTH CLEAN FOR APPROVER) */}
+          <div
+            className={
+              isApprover
+                ? "border-b border-gray-200"
+                : "grid grid-cols-1 lg:grid-cols-2 lg:divide-x divide-gray-200 border-b border-gray-200"
+            }
+          >
+            {/* LEFT / FULL: CITIZEN DETAILS */}
             <div className="p-5 space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-gray-200">
                 <div className="flex items-center gap-2">
@@ -985,8 +1079,8 @@ export const VerificationOfficerWorkspace: React.FC<
                   ) : (
                     <div className="text-[11px] text-gray-500">
                       {isFr
-                        ? "N° ID généré après signature d'approbation"
-                        : "ID number generated after Approver signs"}
+                        ? "N° officiel attribué après signature d'approbation"
+                        : "Official ID assigned after Approver signs"}
                     </div>
                   )}
                   <div className="text-xs text-gray-500 truncate">
@@ -995,13 +1089,37 @@ export const VerificationOfficerWorkspace: React.FC<
                 </div>
               </div>
 
-              <div className="divide-y divide-gray-200 text-xs">
+              {isApprover && openedApp.workflow.verificationSignature && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-3 text-xs">
+                  <div className="text-emerald-900">
+                    <div className="font-semibold">
+                      {isFr ? "Vérifié par :" : "Verified by:"}{" "}
+                      {openedApp.workflow.verificationOfficerName || "Verification Officer"}
+                    </div>
+                  </div>
+                  <img
+                    src={openedApp.workflow.verificationSignature}
+                    alt="Verification Signature"
+                    className="h-9 bg-white px-2 py-0.5 border border-emerald-300 object-contain shrink-0"
+                  />
+                </div>
+              )}
+
+              <div
+                className={
+                  isApprover
+                    ? "grid grid-cols-1 md:grid-cols-2 gap-x-8 text-xs"
+                    : "divide-y divide-gray-200 text-xs"
+                }
+              >
                 {Object.entries(openedApp.details)
                   .filter(([, val]) => Boolean(val))
                   .map(([label, val]) => (
                     <div
                       key={label}
-                      className="py-2 flex items-start justify-between gap-4"
+                      className={`py-2 flex items-start justify-between gap-4 ${
+                        isApprover ? "border-b border-gray-200" : ""
+                      }`}
                     >
                       <span className="text-gray-500 shrink-0">{label}</span>
                       <span className="font-semibold text-gray-900 text-right">
@@ -1012,111 +1130,121 @@ export const VerificationOfficerWorkspace: React.FC<
               </div>
             </div>
 
-            {/* RIGHT: UPLOADED DOCUMENTS & ID PROOF (SCALABLE SELECTOR FOR 10+ DOCS) */}
-            <div className="p-5 space-y-4 flex flex-col border-t lg:border-t-0 border-gray-200">
-              <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-gray-600" />
-                  <h3 className="text-sm font-bold text-gray-900">
-                    {isFr
-                      ? "Documents & ID Proof Téléversés"
-                      : "Uploaded Documents & ID Proof"}
-                  </h3>
+            {/* RIGHT: UPLOADED DOCUMENTS & ID PROOF (ONLY FOR VERIFIER OFFICER) */}
+            {!isApprover && (
+              <div className="p-5 space-y-4 flex flex-col border-t lg:border-t-0 border-gray-200">
+                <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-gray-600" />
+                    <h3 className="text-sm font-bold text-gray-900">
+                      {isFr
+                        ? "Documents & ID Proof Téléversés"
+                        : "Uploaded Documents & ID Proof"}
+                    </h3>
+                  </div>
+                  <span className="text-[11px] font-medium text-gray-500">
+                    {openedApp.supportingDocuments.length > 0
+                      ? `${activeDocIndex + 1} / ${openedApp.supportingDocuments.length}`
+                      : `0 ${isFr ? "fichiers" : "files"}`}
+                  </span>
                 </div>
-                <span className="text-[11px] font-medium text-gray-500">
-                  {openedApp.supportingDocuments.length > 0
-                    ? `${activeDocIndex + 1} / ${openedApp.supportingDocuments.length}`
-                    : `0 ${isFr ? "fichiers" : "files"}`}
-                </span>
-              </div>
 
-              {openedApp.supportingDocuments.length > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <select
-                    value={activeDocIndex}
-                    onChange={(e) => setActiveDocIndex(Number(e.target.value))}
-                    className="flex-1 min-w-0 px-3 py-2 border border-gray-300 bg-white focus:border-gray-500 text-xs font-semibold text-gray-900 cursor-pointer"
-                  >
-                    {openedApp.supportingDocuments.map((doc, idx) => (
-                      <option key={idx} value={idx}>
-                        {idx + 1}. {doc.name}
-                        {doc.isIdProof ? " [ID Proof]" : ""}
-                      </option>
-                    ))}
-                  </select>
+                {openedApp.supportingDocuments.length > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <select
+                      value={activeDocIndex}
+                      onChange={(e) => setActiveDocIndex(Number(e.target.value))}
+                      className="flex-1 min-w-0 px-3 py-2 border border-gray-300 bg-white focus:border-gray-500 text-xs font-semibold text-gray-900 cursor-pointer"
+                    >
+                      {openedApp.supportingDocuments.map((doc, idx) => (
+                        <option key={idx} value={idx}>
+                          {idx + 1}. {doc.name}
+                          {doc.isIdProof ? " [ID Proof]" : ""}
+                        </option>
+                      ))}
+                    </select>
 
-                  <button
-                    type="button"
-                    disabled={activeDocIndex <= 0}
-                    onClick={() => setActiveDocIndex((i) => Math.max(0, i - 1))}
-                    title={isFr ? "Document précédent" : "Previous document"}
-                    className="h-[34px] w-9 inline-flex items-center justify-center border border-gray-300 bg-gray-100 hover:bg-gray-200 disabled:opacity-40 text-gray-700 cursor-pointer disabled:cursor-not-allowed shrink-0"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    disabled={
-                      activeDocIndex >= openedApp.supportingDocuments.length - 1
-                    }
-                    onClick={() =>
-                      setActiveDocIndex((i) =>
-                        Math.min(openedApp.supportingDocuments.length - 1, i + 1)
-                      )
-                    }
-                    title={isFr ? "Document suivant" : "Next document"}
-                    className="h-[34px] w-9 inline-flex items-center justify-center border border-gray-300 bg-gray-100 hover:bg-gray-200 disabled:opacity-40 text-gray-700 cursor-pointer disabled:cursor-not-allowed shrink-0"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+                    <button
+                      type="button"
+                      disabled={activeDocIndex <= 0}
+                      onClick={() => setActiveDocIndex((i) => Math.max(0, i - 1))}
+                      title={isFr ? "Document précédent" : "Previous document"}
+                      className="h-[34px] w-9 inline-flex items-center justify-center border border-gray-300 bg-gray-100 hover:bg-gray-200 disabled:opacity-40 text-gray-700 cursor-pointer disabled:cursor-not-allowed shrink-0"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={
+                        activeDocIndex >= openedApp.supportingDocuments.length - 1
+                      }
+                      onClick={() =>
+                        setActiveDocIndex((i) =>
+                          Math.min(openedApp.supportingDocuments.length - 1, i + 1)
+                        )
+                      }
+                      title={isFr ? "Document suivant" : "Next document"}
+                      className="h-[34px] w-9 inline-flex items-center justify-center border border-gray-300 bg-gray-100 hover:bg-gray-200 disabled:opacity-40 text-gray-700 cursor-pointer disabled:cursor-not-allowed shrink-0"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                <div className="flex-1">
+                  {renderInlineDocumentPreview(openedApp, activeDoc)}
                 </div>
-              )}
-
-              <div className="flex-1">
-                {renderInlineDocumentPreview(openedApp, activeDoc)}
               </div>
-            </div>
+            )}
           </div>
 
           {/* BOTTOM: SIGN & CONFIRM SECTION (CLEAN, NO DRAW/STAMP/APPLY) */}
-          {canVerify ? (
+          {canAct ? (
             <div className="p-5 space-y-4 no-print">
               <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-gray-600" />
                 <span>
-                  {isFr ? "Signer & Confirmer" : "Sign & Confirm"}
+                  {isApprover
+                    ? isFr
+                      ? "Approuver & Signer"
+                      : "Approve & Sign"
+                    : isFr
+                    ? "Signer & Confirmer"
+                    : "Sign & Confirm"}
                 </span>
               </h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <label className="flex items-center gap-2.5 p-3 bg-gray-50 border border-gray-300 cursor-pointer hover:bg-gray-100">
-                  <input
-                    type="checkbox"
-                    checked={docsChecked}
-                    onChange={(e) => setDocsChecked(e.target.checked)}
-                    className="w-4 h-4 text-gray-700"
-                  />
-                  <span className="font-medium text-gray-800">
-                    {isFr
-                      ? "Informations citoyen & documents conformes"
-                      : "Citizen details & uploaded documents match"}
-                  </span>
-                </label>
+              {!isApprover && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <label className="flex items-center gap-2.5 p-3 bg-gray-50 border border-gray-300 cursor-pointer hover:bg-gray-100">
+                    <input
+                      type="checkbox"
+                      checked={docsChecked}
+                      onChange={(e) => setDocsChecked(e.target.checked)}
+                      className="w-4 h-4 text-gray-700"
+                    />
+                    <span className="font-medium text-gray-800">
+                      {isFr
+                        ? "Informations citoyen & documents conformes"
+                        : "Citizen details & uploaded documents match"}
+                    </span>
+                  </label>
 
-                <label className="flex items-center gap-2.5 p-3 bg-gray-50 border border-gray-300 cursor-pointer hover:bg-gray-100">
-                  <input
-                    type="checkbox"
-                    checked={idProofChecked}
-                    onChange={(e) => setIdProofChecked(e.target.checked)}
-                    className="w-4 h-4 text-gray-700"
-                  />
-                  <span className="font-medium text-gray-800">
-                    {isFr
-                      ? "Pièce d'identité (ID Proof) valide"
-                      : "ID Proof verified & valid"}
-                  </span>
-                </label>
-              </div>
+                  <label className="flex items-center gap-2.5 p-3 bg-gray-50 border border-gray-300 cursor-pointer hover:bg-gray-100">
+                    <input
+                      type="checkbox"
+                      checked={idProofChecked}
+                      onChange={(e) => setIdProofChecked(e.target.checked)}
+                      className="w-4 h-4 text-gray-700"
+                    />
+                    <span className="font-medium text-gray-800">
+                      {isFr
+                        ? "Pièce d'identité (ID Proof) valide"
+                        : "ID Proof verified & valid"}
+                    </span>
+                  </label>
+                </div>
+              )}
 
               <input
                 type="text"
@@ -1132,7 +1260,15 @@ export const VerificationOfficerWorkspace: React.FC<
                 language={language}
                 officerName={officer.fullName}
                 officerId={officer.officerId}
-                roleTitle={isFr ? "Vérificateur" : "Verification Officer"}
+                roleTitle={
+                  isApprover
+                    ? isFr
+                      ? "Approbateur"
+                      : "Approver Officer"
+                    : isFr
+                    ? "Vérificateur"
+                    : "Verification Officer"
+                }
                 value={signatureData}
                 onChange={setSignatureData}
               />
@@ -1152,7 +1288,7 @@ export const VerificationOfficerWorkspace: React.FC<
                     <button
                       type="button"
                       disabled={submitting}
-                      onClick={() => handleSubmitVerification("reject")}
+                      onClick={() => handleSubmitAction("reject")}
                       className="px-3.5 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-xs font-semibold cursor-pointer"
                     >
                       {isFr ? "Confirmer le Rejet" : "Confirm Reject"}
@@ -1182,7 +1318,11 @@ export const VerificationOfficerWorkspace: React.FC<
                 <button
                   type="button"
                   disabled={submitting}
-                  onClick={() => handleSubmitVerification("verify_and_sign")}
+                  onClick={() =>
+                    handleSubmitAction(
+                      isApprover ? "check_and_approve" : "verify_and_sign"
+                    )
+                  }
                   className="ml-auto px-6 py-2.5 bg-gray-600 hover:bg-gray-700 disabled:opacity-60 text-white text-xs font-bold inline-flex items-center gap-2 cursor-pointer"
                 >
                   {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -1196,6 +1336,17 @@ export const VerificationOfficerWorkspace: React.FC<
               <span>
                 <strong>{isFr ? "Rejeté :" : "Rejected:"}</strong>{" "}
                 {openedApp.workflow.rejectionReason || openedApp.statusNotesFr}
+              </span>
+            </div>
+          ) : isApprover &&
+            (openedApp.status === "submitted" ||
+              openedApp.status === "in_review") ? (
+            <div className="p-5 bg-gray-50 flex items-center gap-2.5 text-xs text-gray-700">
+              <AlertCircle className="w-4 h-4 text-gray-500 shrink-0" />
+              <span>
+                {isFr
+                  ? "En attente de vérification et signature par l'Officier de Vérification."
+                  : "Waiting for Verification Officer to verify documents and sign first."}
               </span>
             </div>
           ) : (
@@ -1221,6 +1372,8 @@ export const VerificationOfficerWorkspace: React.FC<
               )}
             </div>
           )}
+        </>
+      )}
     </div>
   );
 };

@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const {
       trackingId,
       serviceId = "passeport-ordinaire",
-      serviceTitle = "Passeport Ordinaire",
+      serviceTitle = "Demande de Passeport",
       applicantName,
       surname,
       postName,

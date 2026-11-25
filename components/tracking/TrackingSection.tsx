@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { CitizenApplication, Language } from "../../types";
 import { SignedDocumentAndIdProofViewer } from "../officer/SignedDocumentAndIdProofViewer";
+import { getLocalizedServiceTitle } from "../../data/services";
 import {
   Search,
   CheckCircle2,
@@ -167,7 +168,9 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
                 <span className="text-xs text-slate-400">•</span>
                 <span className="text-xs text-slate-500">{activeResult.submittedAt}</span>
               </div>
-              <h3 className="text-base font-medium text-slate-900">{activeResult.serviceTitle}</h3>
+              <h3 className="text-base font-medium text-slate-900">
+                {getLocalizedServiceTitle(activeResult.serviceId, activeResult.serviceTitle, language)}
+              </h3>
               <p className="text-xs text-slate-500 font-normal mt-0.5">
                 {isFr ? "Bénéficiaire : " : "Applicant: "}
                 <span className="text-slate-800 font-medium">{activeResult.applicantName}</span>

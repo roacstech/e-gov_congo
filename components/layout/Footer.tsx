@@ -46,7 +46,7 @@ export const Footer: React.FC<FooterProps> = ({ language }) => {
               </li>
               <li>
                 <span className="hover:text-blue-600 transition-colors cursor-pointer">
-                  {isFr ? "Passeport Ordinaire" : "Ordinary Passport"}
+                  {isFr ? "Demande de Passeport" : "Passport Application"}
                 </span>
               </li>
               <li>

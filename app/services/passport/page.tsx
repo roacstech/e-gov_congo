@@ -632,7 +632,7 @@ function PassportApplicationContent() {
         body: JSON.stringify({
           trackingId: trackingCode,
           serviceId: "passeport-ordinaire",
-          serviceTitle: isFr ? "Demande de Passeport Ordinaire" : "Passport Application",
+          serviceTitle: isFr ? "Demande de Passeport" : "Passport Application",
           applicantName: computedName,
           surname: surname.trim(),
           postName: postName.trim(),
@@ -669,7 +669,7 @@ function PassportApplicationContent() {
       const newApp: CitizenApplication = {
         trackingId: trackingCode,
         serviceId: "passeport-ordinaire",
-        serviceTitle: isFr ? "Demande de Passeport Ordinaire" : "Passport Application",
+        serviceTitle: isFr ? "Demande de Passeport" : "Passport Application",
         applicantName: computedName,
         email: email.trim(),
         phone: phone.trim(),
@@ -737,8 +737,8 @@ function PassportApplicationContent() {
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight uppercase">
               {isFr ? (
                 <>
-                  Passeport{" "}
-                  <span className="text-blue-600">Ordinaire</span>
+                  Demande de{" "}
+                  <span className="text-blue-600">Passeport</span>
                 </>
               ) : (
                 <>
@@ -751,8 +751,8 @@ function PassportApplicationContent() {
             {/* Centered Subtitle */}
             <p className="max-w-2xl mx-auto text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
               {isFr
-                ? "Demande officielle en ligne pour l'obtention du passeport ordinaire conforme aux normes internationales de l'OACI pour vos voyages à l'international."
-                : "Official online application for the standard Congolese passport for international travel, compliant with international ICAO standards."}
+                ? "Demande officielle en ligne pour l'obtention du passeport biométrique conforme aux normes internationales de l'OACI pour vos voyages à l'international."
+                : "Official online application for the Congolese biometric passport for international travel, compliant with international ICAO standards."}
             </p>
           </div>
         </section>
@@ -778,7 +778,7 @@ function PassportApplicationContent() {
               <div className="text-center space-y-1 pb-1">
                 <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                   {isFr
-                    ? "Formulaire de Demande de Passeport Ordinaire"
+                    ? "Formulaire de Demande de Passeport"
                     : "Passport Application Form"}
                 </h1>
                 <p className="text-xs text-slate-500 font-medium">
@@ -1862,7 +1862,7 @@ function PassportApplicationContent() {
                       {isFr ? "Récépissé Officiel" : "Official Receipt"}
                     </span>
                     <span className="text-xs sm:text-sm font-bold text-slate-900">
-                      {isFr ? "Demande de Passeport Ordinaire" : "Passport Application"}
+                      {isFr ? "Demande de Passeport" : "Passport Application"}
                     </span>
                   </div>
                   <div className="text-right">

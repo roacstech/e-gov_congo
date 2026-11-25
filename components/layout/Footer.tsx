@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { Language } from "../../types";
-import { ShieldCheck, Phone, Mail, MapPin, ExternalLink } from "lucide-react";
+import { ShieldCheck, Phone, Mail, MapPin, ExternalLink, Key } from "lucide-react";
 
 interface FooterProps {
   language: Language;
@@ -136,7 +137,7 @@ export const Footer: React.FC<FooterProps> = ({ language }) => {
 
         {/* Bottom divider and legal */}
         <div className="pt-6 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 font-normal gap-3">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <span className="hover:text-slate-800 cursor-pointer">
               {isFr ? "Mentions Légales" : "Legal Notice"}
             </span>
@@ -148,6 +149,14 @@ export const Footer: React.FC<FooterProps> = ({ language }) => {
             <span className="hover:text-slate-800 cursor-pointer">
               {isFr ? "Accessibilité Numérique" : "Digital Accessibility"}
             </span>
+            <span className="text-slate-300">•</span>
+            <Link
+              href="/admin"
+              className="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center gap-1"
+            >
+              <Key className="w-3 h-3 text-amber-500" />
+              <span>{isFr ? "Espace Super Admin" : "Super Admin Console"}</span>
+            </Link>
           </div>
           <div>
             <span>{isFr ? "Système Sécurisé SSL 256-bit" : "Secured 256-bit SSL System"}</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Language, ServiceCategory, ServiceItem, CitizenApplication } from "../types";
@@ -31,6 +31,23 @@ export default function Home() {
   const router = useRouter();
   const [language, setLanguage] = useState<Language>("fr");
   const isFr = language === "fr";
+
+  // Restore preferred language across pages
+  useEffect(() => {
+    try {
+      const savedLang = localStorage.getItem("egov_language") as Language;
+      if (savedLang === "en" || savedLang === "fr") {
+        setLanguage(savedLang);
+      }
+    } catch {}
+  }, []);
+
+  const handleLanguageChange = (lang: Language) => {
+    setLanguage(lang);
+    try {
+      localStorage.setItem("egov_language", lang);
+    } catch {}
+  };
 
   const [activeTab, setActiveTab] = useState<"services" | "track" | "verify" | "faq">("services");
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory>("all");
@@ -157,7 +174,7 @@ export default function Home() {
       {/* Top Navbar */}
       <Navbar
         language={language}
-        onLanguageChange={setLanguage}
+        onLanguageChange={handleLanguageChange}
         activeTab={activeTab}
         onTabChange={setActiveTab}
         onOpenOfficerPortal={() => setIsOfficerPortalOpen(true)}

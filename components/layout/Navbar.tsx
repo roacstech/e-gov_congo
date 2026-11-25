@@ -223,6 +223,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       router.push("/services/death-certificate");
     } else if (service.id === "permis-conduire") {
       router.push("/services/driving-license");
+    } else if (service.id === "certificat-residence") {
+      router.push("/services/residence-certificate");
+    } else if (service.id === "permis-travail-etranger") {
+      router.push("/services/work-permit");
     } else {
       router.push(`/services/${service.id}`);
     }
@@ -492,11 +496,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Officer portal discreet button */}
             <button
-              onClick={onOpenOfficerPortal}
-              className="text-white/80 hover:text-white p-1.5 transition-colors cursor-pointer ml-0.5"
-              title={isFr ? "Espace Agent Public" : "Public Officer Portal"}
+              onClick={() => router.push("/officer")}
+              className="inline-flex items-center gap-1.5 text-white/90 hover:text-white bg-white/15 hover:bg-white/25 px-2.5 py-1 rounded-full border border-white/20 text-xs font-semibold transition-colors cursor-pointer ml-0.5"
+              title={isFr ? "Espace Agent Public (3 Niveaux)" : "Public Officer Portal (3-Tier)"}
             >
-              <UserCog className="w-4 h-4" />
+              <UserCog className="w-3.5 h-3.5" />
+              <span className="hidden xl:inline">{isFr ? "Agent" : "Officer"}</span>
             </button>
           </nav>
 
@@ -592,7 +597,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="pt-1 flex items-center justify-between text-xs">
             <button
               onClick={() => {
-                onOpenOfficerPortal();
+                router.push("/officer");
                 setMobileMenuOpen(false);
               }}
               className="inline-flex items-center gap-1.5 text-white/90"

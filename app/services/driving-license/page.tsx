@@ -8,6 +8,7 @@ import { SERVICES_DATA } from "@/data/services";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AnimatedCheckmark } from "@/components/AnimatedCheckmark";
+import { readSupportingFile, UploadedFilePayload } from "@/lib/file-upload";
 import {
   Car,
   CheckCircle2,
@@ -407,6 +408,9 @@ function DrivingLicenseContent() {
   const [identityDoc, setIdentityDoc] = useState<string | null>(null);
   const [drivingCertDoc, setDrivingCertDoc] = useState<string | null>(null);
   const [residenceDoc, setResidenceDoc] = useState<string | null>(null);
+  const [uploadedFilePayloads, setUploadedFilePayloads] = useState<
+    Record<string, UploadedFilePayload>
+  >({});
 
   // STEP 3 & SUBMITTED RECEIPT STATE
   const [declarationAgreed, setDeclarationAgreed] = useState(false);
@@ -454,12 +458,15 @@ function DrivingLicenseContent() {
     setValidationError(null);
   };
 
-  const handleSingleFileUpload = (
+  const handleSingleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     setter: (name: string | null) => void
   ) => {
     if (e.target.files && e.target.files.length > 0) {
-      setter(e.target.files[0].name);
+      const file = e.target.files[0];
+      setter(file.name);
+      const payload = await readSupportingFile(file);
+      setUploadedFilePayloads((prev) => ({ ...prev, [file.name]: payload }));
     }
   };
 
@@ -587,16 +594,19 @@ function DrivingLicenseContent() {
 
     const supportingDocsPayload = [
       {
+        ...(medicalFitnessDoc ? uploadedFilePayloads[medicalFitnessDoc] : {}),
         id: "medical_fitness",
         name: "Certificat d'Aptitude Médicale",
         fileName: medicalFitnessDoc || "certificat_medical.pdf",
       },
       {
+        ...(identityDoc ? uploadedFilePayloads[identityDoc] : {}),
         id: "national_id",
         name: "Pièce d'Identité / CNI / NIN",
         fileName: identityDoc || "cni_demandeur.pdf",
       },
       {
+        ...(drivingCertDoc ? uploadedFilePayloads[drivingCertDoc] : {}),
         id: "driving_competence",
         name:
           applicationType === "new"
@@ -605,6 +615,7 @@ function DrivingLicenseContent() {
         fileName: drivingCertDoc || "certificat_competence.pdf",
       },
       {
+        ...(residenceDoc ? uploadedFilePayloads[residenceDoc] : {}),
         id: "residence_cert",
         name: "Certificat de Résidence",
         fileName: residenceDoc || "certificat_residence.pdf",

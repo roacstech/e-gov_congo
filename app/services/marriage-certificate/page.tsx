@@ -8,6 +8,7 @@ import { SERVICES_DATA } from "@/data/services";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AnimatedCheckmark } from "@/components/AnimatedCheckmark";
+import { readSupportingFile, UploadedFilePayload } from "@/lib/file-upload";
 import {
   Heart,
   CheckCircle2,
@@ -348,6 +349,9 @@ function MarriageCertificateContent() {
   const [brideBirthCertDoc, setBrideBirthCertDoc] = useState<string | null>(null);
   const [groomIdDoc, setGroomIdDoc] = useState<string | null>(null);
   const [brideIdDoc, setBrideIdDoc] = useState<string | null>(null);
+  const [uploadedFilePayloads, setUploadedFilePayloads] = useState<
+    Record<string, UploadedFilePayload>
+  >({});
 
   // STEP 3 & SUBMITTED RECEIPT STATE (IN-PLACE CARD MATCHING OTHER SERVICES)
   const [declarationAgreed, setDeclarationAgreed] = useState(false);
@@ -398,12 +402,15 @@ function MarriageCertificateContent() {
     setValidationError(null);
   };
 
-  const handleSingleFileUpload = (
+  const handleSingleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     setter: (name: string | null) => void
   ) => {
     if (e.target.files && e.target.files.length > 0) {
-      setter(e.target.files[0].name);
+      const file = e.target.files[0];
+      setter(file.name);
+      const payload = await readSupportingFile(file);
+      setUploadedFilePayloads((prev) => ({ ...prev, [file.name]: payload }));
     }
   };
 
@@ -542,10 +549,26 @@ function MarriageCertificateContent() {
     const jointSpousesName = `${computedGroomName} & ${computedBrideName}`;
 
     const supportingDocsPayload = [
-      { type: "groom_birth_cert", name: groomBirthCertDoc || "acte_naissance_epoux.pdf" },
-      { type: "bride_birth_cert", name: brideBirthCertDoc || "acte_naissance_epouse.pdf" },
-      { type: "groom_id", name: groomIdDoc || "cni_epoux.pdf" },
-      { type: "bride_id", name: brideIdDoc || "cni_epouse.pdf" },
+      {
+        type: "groom_birth_cert",
+        name: groomBirthCertDoc || "acte_naissance_epoux.pdf",
+        ...(groomBirthCertDoc ? uploadedFilePayloads[groomBirthCertDoc] : {}),
+      },
+      {
+        type: "bride_birth_cert",
+        name: brideBirthCertDoc || "acte_naissance_epouse.pdf",
+        ...(brideBirthCertDoc ? uploadedFilePayloads[brideBirthCertDoc] : {}),
+      },
+      {
+        type: "groom_id",
+        name: groomIdDoc || "cni_epoux.pdf",
+        ...(groomIdDoc ? uploadedFilePayloads[groomIdDoc] : {}),
+      },
+      {
+        type: "bride_id",
+        name: brideIdDoc || "cni_epouse.pdf",
+        ...(brideIdDoc ? uploadedFilePayloads[brideIdDoc] : {}),
+      },
     ];
 
     const newApp: CitizenApplication = {

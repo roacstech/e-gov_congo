@@ -2,7 +2,17 @@
 
 import React, { useState } from "react";
 import { CitizenApplication, Language } from "../../types";
-import { Search, CheckCircle2, Clock, AlertTriangle, Building2, MapPin, Calendar, FileText, ArrowRight, Printer } from "lucide-react";
+import { SignedDocumentAndIdProofViewer } from "../officer/SignedDocumentAndIdProofViewer";
+import {
+  Search,
+  CheckCircle2,
+  AlertTriangle,
+  Building2,
+  MapPin,
+  ArrowRight,
+  Printer,
+  Loader2,
+} from "lucide-react";
 
 interface TrackingSectionProps {
   language: Language;
@@ -31,22 +41,52 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
   });
 
   const [hasSearched, setHasSearched] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const runSearch = async (searchText: string) => {
+    const clean = searchText.trim();
+    if (!clean) return;
+    setHasSearched(true);
+    setIsSearching(true);
+
+    try {
+      const res = await fetch(
+        `/api/officer/applications?trackingId=${encodeURIComponent(clean)}&publicLookup=1`,
+        { cache: "no-store" }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.application) {
+          setActiveResult(data.application);
+          return;
+        }
+      }
+    } catch (err) {
+      console.error("Live tracking lookup error:", err);
+    } finally {
+      setIsSearching(false);
+    }
+
+    const lower = clean.toLowerCase();
+    const found = applications.find(
+      (a) =>
+        a.trackingId.toLowerCase() === lower ||
+        a.applicantName.toLowerCase().includes(lower)
+    );
+    setActiveResult(found || null);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setHasSearched(true);
-    const clean = query.trim().toLowerCase();
-    const found = applications.find(
-      (a) => a.trackingId.toLowerCase() === clean || a.applicantName.toLowerCase().includes(clean)
-    );
-    setActiveResult(found || null);
+    runSearch(query);
   };
 
   const getStepIndex = (status: CitizenApplication["status"]) => {
     switch (status) {
       case "submitted":
-        return 1;
       case "in_review":
+        return 1;
+      case "verified":
         return 2;
       case "approved":
         return 3;
@@ -85,9 +125,11 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
             />
             <button
               type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
+              disabled={isSearching}
+              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5"
             >
-              {isFr ? "Rechercher" : "Track"}
+              {isSearching && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>{isFr ? "Rechercher" : "Track"}</span>
             </button>
           </div>
 
@@ -139,6 +181,10 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
                     ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                     : activeResult.status === "approved"
                     ? "bg-blue-50 text-blue-700 border border-blue-200"
+                    : activeResult.status === "verified"
+                    ? "bg-sky-50 text-sky-700 border border-sky-200"
+                    : activeResult.status === "rejected"
+                    ? "bg-rose-50 text-rose-700 border border-rose-200"
                     : activeResult.status === "in_review"
                     ? "bg-amber-50 text-amber-700 border border-amber-200"
                     : "bg-slate-100 text-slate-700 border border-slate-200"
@@ -148,12 +194,20 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
                 <span>
                   {activeResult.status === "ready"
                     ? isFr
-                      ? "Document disponible au retrait"
-                      : "Ready for Collection"
+                      ? "Document & ID Proof délivrés"
+                      : "Document & ID Proof Ready"
                     : activeResult.status === "approved"
                     ? isFr
-                      ? "Demande validée"
-                      : "Approved"
+                      ? "Approuvé (Double Signature)"
+                      : "Approved (Dual Signed)"
+                    : activeResult.status === "verified"
+                    ? isFr
+                      ? "Vérifié & Signé (Étape 1)"
+                      : "Verified & Signed (Tier 1)"
+                    : activeResult.status === "rejected"
+                    ? isFr
+                      ? "Dossier rejeté"
+                      : "Rejected"
                     : activeResult.status === "in_review"
                     ? isFr
                       ? "En cours d'instruction"
@@ -211,11 +265,11 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
                     }`}
                   />
                   <span className={getStepIndex(activeResult.status) >= 2 ? "text-slate-900" : "text-slate-400"}>
-                    {isFr ? "2. Instruction & Identité" : "2. Identity Verification"}
+                    {isFr ? "2. Vérification & Signature 1" : "2. Verification Officer Signed"}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 font-normal">
-                  {isFr ? "Contrôle des pièces d'état civil" : "Civil status check"}
+                  {isFr ? "Contrôle document + ID proof & signature" : "Documents & ID proof verified + signed"}
                 </p>
               </div>
 
@@ -234,11 +288,11 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
                     }`}
                   />
                   <span className={getStepIndex(activeResult.status) >= 3 ? "text-slate-900" : "text-slate-400"}>
-                    {isFr ? "3. Décision Administrative" : "3. Decision & Signing"}
+                    {isFr ? "3. Approbation & Signature 2" : "3. Approver Signed & Approved"}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 font-normal">
-                  {isFr ? "Signature électronique officielle" : "Electronic state signature"}
+                  {isFr ? "Double signature sur Document + ID Proof" : "Dual signatures on Document & ID Proof"}
                 </p>
               </div>
 
@@ -257,11 +311,11 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
                     }`}
                   />
                   <span className={getStepIndex(activeResult.status) >= 4 ? "text-slate-900" : "text-slate-400"}>
-                    {isFr ? "4. Délivrance / Retrait" : "4. Collection Ready"}
+                    {isFr ? "4. Chef de Service / Retrait" : "4. Head of Service Issued"}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 font-normal">
-                  {isFr ? "Mise à disposition au guichet" : "Available at collection center"}
+                  {isFr ? "Document & ID Proof scellés et prêts" : "Final sealed Document & ID Proof ready"}
                 </p>
               </div>
             </div>
@@ -308,6 +362,23 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
               <span>{isFr ? "Imprimer le récépissé" : "Print Receipt"}</span>
             </button>
           </div>
+
+          {/* Live Signed Document & ID Proof when workflow signatures exist */}
+          {activeResult.workflow &&
+            (activeResult.workflow.verificationSignature ||
+              activeResult.workflow.approverSignature ||
+              activeResult.status === "verified" ||
+              activeResult.status === "approved" ||
+              activeResult.status === "ready") && (
+              <div className="pt-4 border-t border-slate-200">
+                <SignedDocumentAndIdProofViewer
+                  application={activeResult}
+                  language={language}
+                  defaultMode="both"
+                  showPrintButton={false}
+                />
+              </div>
+            )}
         </div>
       ) : hasSearched ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-3">

@@ -179,7 +179,7 @@ export default function ServicesPage() {
             router.push(`/?tab=${tab}`);
           }
         }}
-        onOpenOfficerPortal={() => setIsOfficerPortalOpen(true)}
+        onOpenOfficerPortal={() => router.push("/officer")}
         onPresidencyClick={() => router.push("/#presidential-vision")}
       />
 
@@ -618,6 +618,8 @@ export default function ServicesPage() {
                       else if (srv.id === "acte-mariage") router.push("/services/marriage-certificate");
                       else if (srv.id === "acte-deces") router.push("/services/death-certificate");
                       else if (srv.id === "permis-conduire") router.push("/services/driving-license");
+                      else if (srv.id === "certificat-residence") router.push("/services/residence-certificate");
+                      else if (srv.id === "permis-travail-etranger") router.push("/services/work-permit");
                       else router.push(`/services/${srv.id}`);
                     }}
                     onApply={(srv) => {
@@ -628,6 +630,8 @@ export default function ServicesPage() {
                       else if (srv.id === "acte-mariage") router.push("/services/marriage-certificate");
                       else if (srv.id === "acte-deces") router.push("/services/death-certificate");
                       else if (srv.id === "permis-conduire") router.push("/services/driving-license");
+                      else if (srv.id === "certificat-residence") router.push("/services/residence-certificate");
+                      else if (srv.id === "permis-travail-etranger") router.push("/services/work-permit");
                       else router.push(`/services/${srv.id}`);
                     }}
                   />
@@ -649,6 +653,8 @@ export default function ServicesPage() {
                       else if (srv.id === "acte-mariage") router.push("/services/marriage-certificate");
                       else if (srv.id === "acte-deces") router.push("/services/death-certificate");
                       else if (srv.id === "permis-conduire") router.push("/services/driving-license");
+                      else if (srv.id === "certificat-residence") router.push("/services/residence-certificate");
+                      else if (srv.id === "permis-travail-etranger") router.push("/services/work-permit");
                       else router.push(`/services/${srv.id}`);
                     }}
                     onApply={(srv) => {
@@ -659,6 +665,8 @@ export default function ServicesPage() {
                       else if (srv.id === "acte-mariage") router.push("/services/marriage-certificate");
                       else if (srv.id === "acte-deces") router.push("/services/death-certificate");
                       else if (srv.id === "permis-conduire") router.push("/services/driving-license");
+                      else if (srv.id === "certificat-residence") router.push("/services/residence-certificate");
+                      else if (srv.id === "permis-travail-etranger") router.push("/services/work-permit");
                       else router.push(`/services/${srv.id}`);
                     }}
                   />

@@ -8,6 +8,7 @@ import { SERVICES_DATA } from "../../../data/services";
 import { Navbar } from "../../../components/layout/Navbar";
 import { Footer } from "../../../components/layout/Footer";
 import { AnimatedCheckmark } from "@/components/AnimatedCheckmark";
+import { readSupportingFile, UploadedFilePayload } from "@/lib/file-upload";
 import {
   ShieldCheck,
   CheckCircle2,
@@ -343,6 +344,9 @@ export default function NationalIdServicePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [uploadedDocs, setUploadedDocs] = useState<string[]>([]);
+  const [uploadedFilePayloads, setUploadedFilePayloads] = useState<
+    Record<string, UploadedFilePayload>
+  >({});
 
   // Step 3: Legal Declaration
   const [declarationAgreed, setDeclarationAgreed] = useState(false);
@@ -490,12 +494,15 @@ export default function NationalIdServicePage() {
     }
   };
 
-  const handleSingleFileUpload = (
+  const handleSingleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     setter: (val: string | null) => void
   ) => {
     if (e.target.files && e.target.files[0]) {
-      setter(e.target.files[0].name);
+      const file = e.target.files[0];
+      setter(file.name);
+      const payload = await readSupportingFile(file);
+      setUploadedFilePayloads((prev) => ({ ...prev, [file.name]: payload }));
     }
   };
 
@@ -653,7 +660,9 @@ export default function NationalIdServicePage() {
           email,
           occupation,
           photoUrl: photoDataUrl,
-          supportingDocuments: uploadedDocs,
+          supportingDocuments: uploadedDocs.map(
+            (fn) => uploadedFilePayloads[fn] || fn
+          ),
           declarationAgreed,
           collectionPoint: residenceCity,
         }),

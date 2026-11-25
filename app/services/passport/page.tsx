@@ -8,6 +8,7 @@ import { SERVICES_DATA } from "@/data/services";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AnimatedCheckmark } from "@/components/AnimatedCheckmark";
+import { readSupportingFile, UploadedFilePayload } from "@/lib/file-upload";
 import {
   Globe,
   CheckCircle2,
@@ -351,6 +352,9 @@ function PassportApplicationContent() {
   const [nationalityCertDoc, setNationalityCertDoc] = useState<string | null>(null);
   const [identityCardDoc, setIdentityCardDoc] = useState<string | null>(null);
   const [residenceDoc, setResidenceDoc] = useState<string | null>(null);
+  const [uploadedFilePayloads, setUploadedFilePayloads] = useState<
+    Record<string, UploadedFilePayload>
+  >({});
 
   // Declaration
   const [declarationAgreed, setDeclarationAgreed] = useState(true);
@@ -469,12 +473,15 @@ function PassportApplicationContent() {
     }
   };
 
-  const handleSingleFileUpload = (
+  const handleSingleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     setter: React.Dispatch<React.SetStateAction<string | null>>
   ) => {
     if (e.target.files && e.target.files[0]) {
-      setter(e.target.files[0].name);
+      const file = e.target.files[0];
+      setter(file.name);
+      const payload = await readSupportingFile(file);
+      setUploadedFilePayloads((prev) => ({ ...prev, [file.name]: payload }));
     }
   };
 
@@ -596,10 +603,26 @@ function PassportApplicationContent() {
 
     const supportingDocs = [
       { type: "photo", name: photoFileName || "photo_oaci.jpg" },
-      { type: "birth_certificate", name: birthCertDoc },
-      { type: "nationality_certificate", name: nationalityCertDoc },
-      { type: "identity_document", name: identityCardDoc },
-      { type: "residence_certificate", name: residenceDoc },
+      {
+        type: "birth_certificate",
+        name: birthCertDoc,
+        ...(birthCertDoc ? uploadedFilePayloads[birthCertDoc] : {}),
+      },
+      {
+        type: "nationality_certificate",
+        name: nationalityCertDoc,
+        ...(nationalityCertDoc ? uploadedFilePayloads[nationalityCertDoc] : {}),
+      },
+      {
+        type: "identity_document",
+        name: identityCardDoc,
+        ...(identityCardDoc ? uploadedFilePayloads[identityCardDoc] : {}),
+      },
+      {
+        type: "residence_certificate",
+        name: residenceDoc,
+        ...(residenceDoc ? uploadedFilePayloads[residenceDoc] : {}),
+      },
     ].filter((d) => d.name);
 
     try {

@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { Language, VerifiedDocument } from "../../types";
+import { CitizenApplication, Language, VerifiedDocument } from "../../types";
 import { SAMPLE_DOCUMENTS } from "../../data/services";
-import { ShieldCheck, CheckCircle2, QrCode, Search, Building2, User, Calendar, AlertCircle } from "lucide-react";
+import { SignedDocumentAndIdProofViewer } from "../officer/SignedDocumentAndIdProofViewer";
+import { ShieldCheck, CheckCircle2, QrCode, Search, Building2, Calendar, AlertCircle, Loader2 } from "lucide-react";
 
 interface VerificationSectionProps {
   language: Language;
@@ -15,24 +16,49 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({ langua
   const [verifiedDoc, setVerifiedDoc] = useState<VerifiedDocument | null>(
     SAMPLE_DOCUMENTS["DOC-CD-99412"] || null
   );
+  const [liveVerifiedApp, setLiveVerifiedApp] = useState<CitizenApplication | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleVerify = (e: React.FormEvent) => {
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     const clean = docNumber.trim().toUpperCase();
     if (!clean) return;
 
+    setErrorMsg(null);
+    setLiveVerifiedApp(null);
+
     if (SAMPLE_DOCUMENTS[clean]) {
       setVerifiedDoc(SAMPLE_DOCUMENTS[clean]);
-      setErrorMsg(null);
-    } else {
-      setVerifiedDoc(null);
-      setErrorMsg(
-        isFr
-          ? "Numéro de document non répertorié ou certificat invalide dans le registre central."
-          : "Document number not found or invalid certificate in central state registry."
-      );
+      return;
     }
+
+    setIsVerifying(true);
+    try {
+      const res = await fetch(
+        `/api/officer/applications?trackingId=${encodeURIComponent(clean)}&publicLookup=1`,
+        { cache: "no-store" }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.application) {
+          setVerifiedDoc(null);
+          setLiveVerifiedApp(data.application);
+          return;
+        }
+      }
+    } catch (err) {
+      console.error("Document verification lookup error:", err);
+    } finally {
+      setIsVerifying(false);
+    }
+
+    setVerifiedDoc(null);
+    setErrorMsg(
+      isFr
+        ? "Numéro de document non répertorié ou certificat invalide dans le registre central."
+        : "Document number not found or invalid certificate in central state registry."
+    );
   };
 
   return (
@@ -65,9 +91,11 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({ langua
             />
             <button
               type="submit"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
+              disabled={isVerifying}
+              className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5"
             >
-              {isFr ? "Vérifier" : "Verify"}
+              {isVerifying && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>{isFr ? "Vérifier" : "Verify"}</span>
             </button>
           </div>
 
@@ -78,6 +106,7 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({ langua
               onClick={() => {
                 setDocNumber("DOC-CD-99412");
                 setVerifiedDoc(SAMPLE_DOCUMENTS["DOC-CD-99412"]);
+                setLiveVerifiedApp(null);
                 setErrorMsg(null);
               }}
               className="font-mono text-emerald-700 hover:underline cursor-pointer"
@@ -90,6 +119,7 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({ langua
               onClick={() => {
                 setDocNumber("DOC-CD-78210");
                 setVerifiedDoc(SAMPLE_DOCUMENTS["DOC-CD-78210"]);
+                setLiveVerifiedApp(null);
                 setErrorMsg(null);
               }}
               className="font-mono text-emerald-700 hover:underline cursor-pointer"
@@ -200,6 +230,16 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({ langua
             <span className="text-emerald-700 font-medium">Statut : VALIDE</span>
           </div>
         </div>
+      )}
+
+      {/* Live Database Document & ID Proof Presentation with Dual Officer Signatures */}
+      {liveVerifiedApp && (
+        <SignedDocumentAndIdProofViewer
+          application={liveVerifiedApp}
+          language={language}
+          defaultMode="both"
+          showPrintButton={true}
+        />
       )}
 
       {errorMsg && (

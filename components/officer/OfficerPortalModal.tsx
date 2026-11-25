@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { CitizenApplication, Language } from "../../types";
-import { X, Shield } from "lucide-react";
+import { X, Shield, ExternalLink } from "lucide-react";
 
 interface OfficerPortalModalProps {
   isOpen: boolean;
@@ -225,12 +226,22 @@ export const OfficerPortalModal: React.FC<OfficerPortalModalProps> = ({
         {/* Footer */}
         <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
           <span>{isFr ? "Toutes les actions sont enregistrées dans le journal d'audit national." : "All actions logged in state audit registry."}</span>
-          <button
-            onClick={onClose}
-            className="px-4 py-1.5 rounded-lg text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors cursor-pointer"
-          >
-            {isFr ? "Fermer l'espace agent" : "Close Officer Portal"}
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/officer"
+              onClick={onClose}
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium transition-colors"
+            >
+              <span>{isFr ? "Ouvrir Portail 3 Niveaux" : "Open 3-Tier Officer Portal"}</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+            <button
+              onClick={onClose}
+              className="px-4 py-1.5 rounded-lg text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors cursor-pointer"
+            >
+              {isFr ? "Fermer l'espace agent" : "Close Officer Portal"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

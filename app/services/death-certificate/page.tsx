@@ -8,6 +8,7 @@ import { SERVICES_DATA } from "@/data/services";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AnimatedCheckmark } from "@/components/AnimatedCheckmark";
+import { readSupportingFile, UploadedFilePayload } from "@/lib/file-upload";
 import {
   FileText,
   CheckCircle2,
@@ -411,6 +412,9 @@ function DeathCertificateContent() {
   const [deceasedIdDoc, setDeceasedIdDoc] = useState<string | null>(null);
   const [declarantIdDoc, setDeclarantIdDoc] = useState<string | null>(null);
   const [burialPermitDoc, setBurialPermitDoc] = useState<string | null>(null);
+  const [uploadedFilePayloads, setUploadedFilePayloads] = useState<
+    Record<string, UploadedFilePayload>
+  >({});
 
   // STEP 3 & SUBMISSION STATE
   const [declarationAgreed, setDeclarationAgreed] = useState(false);
@@ -471,12 +475,15 @@ function DeathCertificateContent() {
     setValidationError(null);
   };
 
-  const handleSingleFileUpload = (
+  const handleSingleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     setter: (name: string | null) => void
   ) => {
     if (e.target.files && e.target.files.length > 0) {
-      setter(e.target.files[0].name);
+      const file = e.target.files[0];
+      setter(file.name);
+      const payload = await readSupportingFile(file);
+      setUploadedFilePayloads((prev) => ({ ...prev, [file.name]: payload }));
     }
   };
 
@@ -615,21 +622,25 @@ function DeathCertificateContent() {
 
     const supportingDocsPayload = [
       {
+        ...(medicalNoticeDoc ? uploadedFilePayloads[medicalNoticeDoc] : {}),
         id: "medical_death_notice",
         name: "Constat Médical de Décès",
         fileName: medicalNoticeDoc || "constat_deces_medical.pdf",
       },
       {
+        ...(deceasedIdDoc ? uploadedFilePayloads[deceasedIdDoc] : {}),
         id: "deceased_id",
         name: "Pièce d'Identité du Défunt",
         fileName: deceasedIdDoc || "cni_defunt.pdf",
       },
       {
+        ...(declarantIdDoc ? uploadedFilePayloads[declarantIdDoc] : {}),
         id: "declarant_id",
         name: "Pièce d'Identité du Déclarant",
         fileName: declarantIdDoc || "cni_declarant.pdf",
       },
       {
+        ...(burialPermitDoc ? uploadedFilePayloads[burialPermitDoc] : {}),
         id: "burial_permit",
         name: "Livret de Famille / Domicile",
         fileName: burialPermitDoc || "livret_famille.pdf",

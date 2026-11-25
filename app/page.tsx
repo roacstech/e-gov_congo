@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Language, ServiceCategory, ServiceItem, CitizenApplication } from "../types";
@@ -49,6 +49,20 @@ export default function Home() {
   });
   const [applyService, setApplyService] = useState<ServiceItem | null>(null);
   const [isOfficerPortalOpen, setIsOfficerPortalOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("officer") === "true") {
+      router.replace("/officer");
+      return;
+    }
+    const tabParam = params.get("tab");
+    if (tabParam === "track" || tabParam === "verify" || tabParam === "faq" || tabParam === "services") {
+      const timer = window.setTimeout(() => setActiveTab(tabParam), 0);
+      return () => window.clearTimeout(timer);
+    }
+  }, [router]);
 
   // Applications live state (persisting new applications during user session)
   const [applications, setApplications] = useState<CitizenApplication[]>(SAMPLE_APPLICATIONS);
@@ -160,7 +174,7 @@ export default function Home() {
         onLanguageChange={setLanguage}
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onOpenOfficerPortal={() => setIsOfficerPortalOpen(true)}
+        onOpenOfficerPortal={() => router.push("/officer")}
       />
 
       {/* Main Content Body */}
@@ -418,6 +432,10 @@ export default function Home() {
                             router.push("/services/death-certificate");
                           } else if (item.service.id === "permis-conduire") {
                             router.push("/services/driving-license");
+                          } else if (item.service.id === "certificat-residence") {
+                            router.push("/services/residence-certificate");
+                          } else if (item.service.id === "permis-travail-etranger") {
+                            router.push("/services/work-permit");
                           } else {
                             router.push(`/services/${item.service.id}`);
                           }
@@ -470,6 +488,10 @@ export default function Home() {
                             router.push("/services/death-certificate");
                           } else if (item.service.id === "permis-conduire") {
                             router.push("/services/driving-license");
+                          } else if (item.service.id === "certificat-residence") {
+                            router.push("/services/residence-certificate");
+                          } else if (item.service.id === "permis-travail-etranger") {
+                            router.push("/services/work-permit");
                           } else {
                             router.push(`/services/${item.service.id}`);
                           }
@@ -495,6 +517,10 @@ export default function Home() {
                             router.push("/services/death-certificate");
                           } else if (item.service.id === "permis-conduire") {
                             router.push("/services/driving-license");
+                          } else if (item.service.id === "certificat-residence") {
+                            router.push("/services/residence-certificate");
+                          } else if (item.service.id === "permis-travail-etranger") {
+                            router.push("/services/work-permit");
                           } else {
                             router.push(`/services/${item.service.id}`);
                           }

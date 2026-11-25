@@ -8,6 +8,7 @@ import { SERVICES_DATA } from "@/data/services";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AnimatedCheckmark } from "@/components/AnimatedCheckmark";
+import { readSupportingFile, UploadedFilePayload } from "@/lib/file-upload";
 import {
   Award,
   CheckCircle2,
@@ -347,6 +348,9 @@ function NationalityCertificateContent() {
   const [fatherIdDoc, setFatherIdDoc] = useState<string | null>(null);
   const [motherIdDoc, setMotherIdDoc] = useState<string | null>(null);
   const [residenceDoc, setResidenceDoc] = useState<string | null>(null);
+  const [uploadedFilePayloads, setUploadedFilePayloads] = useState<
+    Record<string, UploadedFilePayload>
+  >({});
 
   // Step 3 Review & Submission
   const [declarationAgreed, setDeclarationAgreed] = useState(true);
@@ -498,12 +502,15 @@ function NationalityCertificateContent() {
     }
   };
 
-  const handleSingleFileUpload = (
+  const handleSingleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     setter: (name: string | null) => void
   ) => {
     if (e.target.files && e.target.files.length > 0) {
-      setter(e.target.files[0].name);
+      const file = e.target.files[0];
+      setter(file.name);
+      const payload = await readSupportingFile(file);
+      setUploadedFilePayloads((prev) => ({ ...prev, [file.name]: payload }));
     }
   };
 
@@ -622,10 +629,26 @@ function NationalityCertificateContent() {
 
     const supportingDocsPayload = [
       { type: "photo_oaci", name: photoFileName || "photo_oaci.jpg" },
-      { type: "birth_certificate", name: birthCertDoc || "acte_naissance.pdf" },
-      { type: "father_id", name: fatherIdDoc || "cni_pere.pdf" },
-      { type: "mother_id", name: motherIdDoc || "cni_mere.pdf" },
-      { type: "residence_certificate", name: residenceDoc || "certificat_residence.pdf" },
+      {
+        type: "birth_certificate",
+        name: birthCertDoc || "acte_naissance.pdf",
+        ...(birthCertDoc ? uploadedFilePayloads[birthCertDoc] : {}),
+      },
+      {
+        type: "father_id",
+        name: fatherIdDoc || "cni_pere.pdf",
+        ...(fatherIdDoc ? uploadedFilePayloads[fatherIdDoc] : {}),
+      },
+      {
+        type: "mother_id",
+        name: motherIdDoc || "cni_mere.pdf",
+        ...(motherIdDoc ? uploadedFilePayloads[motherIdDoc] : {}),
+      },
+      {
+        type: "residence_certificate",
+        name: residenceDoc || "certificat_residence.pdf",
+        ...(residenceDoc ? uploadedFilePayloads[residenceDoc] : {}),
+      },
     ];
 
     try {

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { unstable_rethrow } from "next/navigation";
 import { getAuthenticatedOfficer } from "@/lib/officer-auth";
 import {
-  fetchAllOfficerApplications,
   fetchAuditLogs,
+  fetchPaginatedOfficerApplications,
   findApplicationByTrackingOrDocNumber,
 } from "@/lib/officer-applications";
 
@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
   const publicLookup = searchParams.get("publicLookup") === "1";
 
   try {
-
     // Public single tracking/document lookup for citizen TrackingSection & VerificationSection
     if (trackingId && publicLookup) {
       const found = await findApplicationByTrackingOrDocNumber(trackingId);
@@ -54,27 +53,30 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const applications = await fetchAllOfficerApplications({
-      serviceId: officer.serviceId,
+    const page = Number(searchParams.get("page") || "1");
+    const limit = Number(searchParams.get("limit") || "10");
+    const serviceId = searchParams.get("serviceId") || "all";
+    const status = searchParams.get("status") || "all";
+    const search = searchParams.get("search") || "";
+
+    const result = await fetchPaginatedOfficerApplications({
+      officerServiceId: officer.serviceId,
+      serviceId,
+      status,
+      search,
+      page,
+      limit,
     });
     const auditLogs = await fetchAuditLogs();
-
-    const stats = {
-      total: applications.length,
-      pendingVerification: applications.filter(
-        (a) => a.status === "submitted" || a.status === "in_review"
-      ).length,
-      pendingApproval: applications.filter((a) => a.status === "verified").length,
-      pendingHeadIssuance: applications.filter((a) => a.status === "approved").length,
-      ready: applications.filter((a) => a.status === "ready").length,
-      rejected: applications.filter((a) => a.status === "rejected").length,
-    };
 
     return NextResponse.json({
       success: true,
       officer,
-      stats,
-      applications,
+      stats: result.stats,
+      pagination: result.pagination,
+      serviceCounts: result.serviceCounts,
+      statusCounts: result.statusCounts,
+      applications: result.applications,
       auditLogs,
     });
   } catch (err) {

@@ -581,6 +581,136 @@ export async function fetchAllOfficerApplications(options?: {
   return allApps;
 }
 
+export interface PaginatedApplicationsResult {
+  applications: OfficerApplicationRecord[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalItems: number;
+    totalPages: number;
+    hasPrev: boolean;
+    hasNext: boolean;
+  };
+  stats: {
+    total: number;
+    pendingVerification: number;
+    pendingApproval: number;
+    pendingHeadIssuance: number;
+    ready: number;
+    rejected: number;
+  };
+  serviceCounts: Record<string, number>;
+  statusCounts: {
+    pending: number;
+    verified: number;
+    all: number;
+  };
+}
+
+export async function fetchPaginatedOfficerApplications(options: {
+  officerServiceId?: string;
+  serviceId?: string;
+  status?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<PaginatedApplicationsResult> {
+  const allApps = await fetchAllOfficerApplications({
+    serviceId: options.officerServiceId,
+  });
+
+  const stats = {
+    total: allApps.length,
+    pendingVerification: allApps.filter(
+      (a) => a.status === "submitted" || a.status === "in_review"
+    ).length,
+    pendingApproval: allApps.filter((a) => a.status === "verified").length,
+    pendingHeadIssuance: allApps.filter((a) => a.status === "approved").length,
+    ready: allApps.filter((a) => a.status === "ready").length,
+    rejected: allApps.filter((a) => a.status === "rejected").length,
+  };
+
+  const serviceCounts: Record<string, number> = { all: allApps.length };
+  for (const app of allApps) {
+    serviceCounts[app.serviceId] = (serviceCounts[app.serviceId] || 0) + 1;
+  }
+
+  const targetService = options.serviceId || "all";
+  const q = (options.search || "").trim().toLowerCase();
+
+  // Base filtered by service and search (before status tab) to compute accurate tab counts
+  const serviceAndSearchFiltered = allApps.filter((app) => {
+    if (targetService !== "all" && app.serviceId !== targetService) {
+      return false;
+    }
+    if (q) {
+      return (
+        app.trackingId.toLowerCase().includes(q) ||
+        app.applicantName.toLowerCase().includes(q) ||
+        app.serviceTitle.toLowerCase().includes(q) ||
+        app.city.toLowerCase().includes(q) ||
+        (app.issuedNumber || "").toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
+
+  const statusCounts = {
+    pending: serviceAndSearchFiltered.filter(
+      (a) => a.status === "submitted" || a.status === "in_review"
+    ).length,
+    verified: serviceAndSearchFiltered.filter(
+      (a) => a.status !== "submitted" && a.status !== "in_review"
+    ).length,
+    all: serviceAndSearchFiltered.length,
+  };
+
+  const statusFilter = options.status || "all";
+  const fullyFiltered = serviceAndSearchFiltered.filter((app) => {
+    if (statusFilter === "pending") {
+      return app.status === "submitted" || app.status === "in_review";
+    }
+    if (statusFilter === "verified") {
+      return app.status !== "submitted" && app.status !== "in_review";
+    }
+    if (statusFilter === "pending_approval") {
+      return app.status === "verified";
+    }
+    if (statusFilter === "pending_head") {
+      return app.status === "approved";
+    }
+    if (statusFilter === "ready") {
+      return app.status === "ready";
+    }
+    if (statusFilter === "rejected") {
+      return app.status === "rejected";
+    }
+    return true;
+  });
+
+  const limit = Math.min(Math.max(1, Number(options.limit) || 10), 100);
+  const totalItems = fullyFiltered.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+  const page = Math.min(Math.max(1, Number(options.page) || 1), totalPages);
+  const start = (page - 1) * limit;
+  const pagedApps = fullyFiltered.slice(start, start + limit);
+
+  return {
+    applications: pagedApps,
+    pagination: {
+      page,
+      limit,
+      totalItems,
+      totalPages,
+      hasPrev: page > 1,
+      hasNext: page < totalPages,
+    },
+    stats,
+    serviceCounts,
+    statusCounts,
+  };
+}
+
 export async function findApplicationByTrackingOrDocNumber(
   identifier: string
 ): Promise<OfficerApplicationRecord | null> {

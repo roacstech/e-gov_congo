@@ -117,8 +117,8 @@ async function runSchemaMigration(): Promise<void> {
       service_title: "Tous les Services Publics (Guichet Central)",
       ministry: "Direction Générale du Contrôle & Vérification Documentaire",
       role: "verification_officer",
-      role_label_fr: "1. Officier de Vérification",
-      role_label_en: "1. Verification Officer",
+      role_label_fr: "Officier de Vérification",
+      role_label_en: "Verification Officer",
       phone: "+243 81 500 1001",
       email: "p.kabila@verification.gouv.cd",
     },
@@ -131,8 +131,8 @@ async function runSchemaMigration(): Promise<void> {
       service_title: "Tous les Services Publics (Guichet Central)",
       ministry: "Direction Nationale des Approbations & Signatures Officielles",
       role: "approver_officer",
-      role_label_fr: "2. Officier d'Approbation",
-      role_label_en: "2. Approver Officer",
+      role_label_fr: "Officier d'Approbation",
+      role_label_en: "Approver Officer",
       phone: "+243 82 500 2002",
       email: "c.mbuyi@approbation.gouv.cd",
     },
@@ -145,8 +145,8 @@ async function runSchemaMigration(): Promise<void> {
       service_title: "Tous les Services Publics (Direction Générale)",
       ministry: "Secrétariat Général — Chef de Service Central",
       role: "head_of_service",
-      role_label_fr: "3. Chef de Service",
-      role_label_en: "3. Head of Service Officer",
+      role_label_fr: "Chef de Service",
+      role_label_en: "Head of Service Officer",
       phone: "+243 89 500 3003",
       email: "h.kasongo@direction.gouv.cd",
     },
@@ -160,7 +160,9 @@ async function runSchemaMigration(): Promise<void> {
         service_title, ministry, role, role_label_fr, role_label_en,
         is_active, phone, email
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, TRUE, $11, $12)
-      ON CONFLICT (username) DO NOTHING;
+      ON CONFLICT (username) DO UPDATE SET
+        role_label_fr = EXCLUDED.role_label_fr,
+        role_label_en = EXCLUDED.role_label_en;
       `,
       [
         off.officer_id,

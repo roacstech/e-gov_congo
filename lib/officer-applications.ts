@@ -43,9 +43,9 @@ export const SERVICE_TABLE_CONFIGS: ServiceTableConfig[] = [
   {
     tableName: "passport_applications",
     serviceId: "passeport-ordinaire",
-    aliasServiceIds: ["passeport-ordinaire"],
+    aliasServiceIds: ["passeport-ordinaire", "passport"],
     serviceCode: "PAS-02",
-    defaultTitleFr: "Demande de Passeport Ordinaire",
+    defaultTitleFr: "Demande de Passeport",
     ministryFr: "Ministère des Affaires Étrangères et Coopération Internationale",
     ministryEn: "Ministry of Foreign Affairs and International Cooperation",
     numberColumn: "passport_number",
@@ -494,13 +494,20 @@ function normalizeApplicationRow(
     "Collection Hub": collectionPoint,
   };
 
+  const rawTitle = String(row.service_title || cfg.defaultTitleFr);
+  const serviceTitle =
+    cfg.tableName === "passport_applications" &&
+    /passeport ordinaire/i.test(rawTitle)
+      ? cfg.defaultTitleFr
+      : rawTitle;
+
   return {
     id: Number(row.id),
     tableName: cfg.tableName,
     trackingId,
     serviceId: cfg.serviceId,
     serviceCode: cfg.serviceCode,
-    serviceTitle: String(row.service_title || cfg.defaultTitleFr),
+    serviceTitle,
     ministryFr: cfg.ministryFr,
     ministryEn: cfg.ministryEn,
     applicantName,
@@ -603,6 +610,8 @@ export interface PaginatedApplicationsResult {
   statusCounts: {
     pending: number;
     verified: number;
+    pendingApproval: number;
+    approved: number;
     all: number;
   };
 }
@@ -662,6 +671,12 @@ export async function fetchPaginatedOfficerApplications(options: {
     verified: serviceAndSearchFiltered.filter(
       (a) => a.status !== "submitted" && a.status !== "in_review"
     ).length,
+    pendingApproval: serviceAndSearchFiltered.filter(
+      (a) => a.status === "verified"
+    ).length,
+    approved: serviceAndSearchFiltered.filter(
+      (a) => a.status === "approved" || a.status === "ready"
+    ).length,
     all: serviceAndSearchFiltered.length,
   };
 
@@ -675,6 +690,9 @@ export async function fetchPaginatedOfficerApplications(options: {
     }
     if (statusFilter === "pending_approval") {
       return app.status === "verified";
+    }
+    if (statusFilter === "approved") {
+      return app.status === "approved" || app.status === "ready";
     }
     if (statusFilter === "pending_head") {
       return app.status === "approved";
@@ -715,7 +733,7 @@ export async function findApplicationByTrackingOrDocNumber(
   identifier: string
 ): Promise<OfficerApplicationRecord | null> {
   await ensureOfficerSchema();
-  const clean = identifier.trim();
+  const clean = identifier.trim().replace(/\s+/g, "");
   if (!clean) return null;
 
   const hash = hashSHA256(clean);
@@ -759,6 +777,36 @@ export async function findApplicationByTrackingOrDocNumber(
     } catch (err) {
       console.warn(`Search error in ${cfg.tableName}:`, err);
     }
+  }
+
+  // Fallback: match against workflow.issued_document_number when hashColumn wasn't indexed yet
+  try {
+    const allWf = await query(
+      `SELECT * FROM application_workflows WHERE issued_document_number IS NOT NULL ORDER BY updated_at DESC LIMIT 250;`
+    );
+    const targetUpper = clean.toUpperCase();
+    for (const wf of allWf.rows) {
+      const decDoc = decryptAES256(String(wf.issued_document_number || ""));
+      if (decDoc && decDoc.toUpperCase() === targetUpper) {
+        const wfCfg = SERVICE_TABLE_CONFIGS.find(
+          (c) => c.serviceId === String(wf.service_id) || c.aliasServiceIds.includes(String(wf.service_id))
+        );
+        const searchConfigs = wfCfg
+          ? [wfCfg, ...SERVICE_TABLE_CONFIGS.filter((c) => c.tableName !== wfCfg.tableName)]
+          : SERVICE_TABLE_CONFIGS;
+        for (const cfg of searchConfigs) {
+          const rowRes = await query(
+            `SELECT * FROM "${cfg.tableName}" WHERE tracking_id_hash = $1 LIMIT 1;`,
+            [String(wf.tracking_id_hash)]
+          );
+          if (rowRes.rows.length > 0) {
+            return normalizeApplicationRow(cfg, rowRes.rows[0], wf);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Workflow issued_document_number fallback search error:", err);
   }
 
   return null;
@@ -947,14 +995,8 @@ export async function executeWorkflowAction(
     }
     if (currentStage !== "verified" || !existingWf?.verification_signature) {
       throw new WorkflowError(
-        "Le dossier doit d'abord être vérifié et signé par l'Officier de Vérification (Niveau 1).",
+        "Le dossier doit d'abord être vérifié et signé par l'Officier de Vérification.",
         409
-      );
-    }
-    if (!input.docsChecked || !input.idProofChecked) {
-      throw new WorkflowError(
-        "L'Officier d'Approbation doit vérifier les documents et la pièce d'identité avant d'approuver.",
-        400
       );
     }
     if (!input.signatureData || !input.signatureData.startsWith("data:image/")) {

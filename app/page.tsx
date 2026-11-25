@@ -59,7 +59,12 @@ export default function Home() {
     }
     const tabParam = params.get("tab");
     if (tabParam === "track" || tabParam === "verify" || tabParam === "faq" || tabParam === "services") {
-      const timer = window.setTimeout(() => setActiveTab(tabParam), 0);
+      const timer = window.setTimeout(() => {
+        setActiveTab(tabParam);
+        if (tabParam !== "services") {
+          document.getElementById("portal-tabs")?.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 60);
       return () => window.clearTimeout(timer);
     }
   }, [router]);
@@ -173,7 +178,14 @@ export default function Home() {
         language={language}
         onLanguageChange={setLanguage}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          if (tab !== "services") {
+            window.setTimeout(() => {
+              document.getElementById("portal-tabs")?.scrollIntoView({ behavior: "smooth" });
+            }, 50);
+          }
+        }}
         onOpenOfficerPortal={() => router.push("/officer")}
       />
 
@@ -372,7 +384,7 @@ export default function Home() {
         {/* ========================================================================= */}
         {/* 2. TABBED CONTENT SECTION */}
         {/* ========================================================================= */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <section id="portal-tabs" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 scroll-mt-24">
           {/* TAB 1: 3 FEATURED SERVICES WITH NEW CARD UI MATCHING USER REFERENCE */}
           {activeTab === "services" && (
             <div className="space-y-8">

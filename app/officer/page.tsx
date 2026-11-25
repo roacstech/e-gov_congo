@@ -17,6 +17,7 @@ import { Footer } from "@/components/layout/Footer";
 import { SignaturePad } from "@/components/officer/SignaturePad";
 import { SignedDocumentAndIdProofViewer } from "@/components/officer/SignedDocumentAndIdProofViewer";
 import { VerificationOfficerWorkspace } from "@/components/officer/VerificationOfficerWorkspace";
+import { getLocalizedServiceTitle } from "@/data/services";
 import {
   AlertCircle,
   ArrowLeft,
@@ -34,7 +35,6 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
-  Stamp,
   User,
   X,
   XCircle,
@@ -203,7 +203,7 @@ function OfficerPortalContent() {
         if (data.authenticated && data.officer) {
           setOfficer(data.officer);
           setQueueFilter(getDefaultQueueForTier(data.officer.roleTier));
-          if (data.officer.roleTier !== "verification_officer") {
+          if (data.officer.roleTier !== "verification_officer" && data.officer.roleTier !== "approver_officer") {
             await loadApplications();
           }
         } else {
@@ -242,7 +242,7 @@ function OfficerPortalContent() {
       setProfileOpen(false);
       setActionError(null);
       setActionSuccess(null);
-      if (data.officer.roleTier !== "verification_officer") {
+      if (data.officer.roleTier !== "verification_officer" && data.officer.roleTier !== "approver_officer") {
         await loadApplications();
       }
     } catch {
@@ -272,7 +272,10 @@ function OfficerPortalContent() {
   };
 
   const handleRefresh = async () => {
-    if (officer?.roleTier === "verification_officer") {
+    if (
+      officer?.roleTier === "verification_officer" ||
+      officer?.roleTier === "approver_officer"
+    ) {
       setRefreshSignal((s) => s + 1);
     } else {
       await loadApplications();
@@ -670,18 +673,20 @@ function OfficerPortalContent() {
           /* CLEAN FLAT OFFICER WORKSPACE                                     */
           /* ================================================================ */
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5">
-            {officer.roleTier === "verification_officer" && openedVerifierApp && (
-              <div className="mb-3 no-print">
-                <button
-                  type="button"
-                  onClick={() => setOpenedVerifierApp(null)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-gray-300 bg-white hover:bg-gray-100 text-xs font-semibold text-gray-800 cursor-pointer"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>{isFr ? "Retour à la liste" : "Back to List"}</span>
-                </button>
-              </div>
-            )}
+            {(officer.roleTier === "verification_officer" ||
+              officer.roleTier === "approver_officer") &&
+              openedVerifierApp && (
+                <div className="mb-3 no-print">
+                  <button
+                    type="button"
+                    onClick={() => setOpenedVerifierApp(null)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-gray-300 bg-white hover:bg-gray-100 text-xs font-semibold text-gray-800 cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>{isFr ? "Retour à la liste" : "Back to List"}</span>
+                  </button>
+                </div>
+              )}
 
             <div className="bg-white border border-gray-300">
               {/* Clean Top Bar */}
@@ -788,7 +793,8 @@ function OfficerPortalContent() {
                 </div>
               </div>
 
-            {officer.roleTier === "verification_officer" ? (
+            {officer.roleTier === "verification_officer" ||
+            officer.roleTier === "approver_officer" ? (
               <VerificationOfficerWorkspace
                 language={language}
                 officer={officer}
@@ -901,7 +907,9 @@ function OfficerPortalContent() {
                                 {app.applicantName}
                               </div>
                               <div className="flex items-center justify-between gap-2 mt-1 text-[11px] text-gray-500">
-                                <span className="truncate">{app.serviceTitle}</span>
+                                <span className="truncate">
+                                  {getLocalizedServiceTitle(app.serviceId, app.serviceTitle, language)}
+                                </span>
                                 <div className="flex items-center gap-1 shrink-0 font-mono text-[10px]">
                                   <span
                                     className={
@@ -952,7 +960,7 @@ function OfficerPortalContent() {
                                 </span>
                                 <span className="text-gray-300">•</span>
                                 <span className="text-gray-600 font-medium">
-                                  {selectedApp.serviceTitle}
+                                  {getLocalizedServiceTitle(selectedApp.serviceId, selectedApp.serviceTitle, language)}
                                 </span>
                                 {selectedApp.issuedNumber && (
                                   <>
@@ -1206,73 +1214,13 @@ function OfficerPortalContent() {
                             ) : canActOnSelected ? (
                               <div className="bg-white border border-gray-300 p-5 space-y-4">
                                 <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                                  {officer.roleTier === "approver_officer" ? (
-                                    <>
-                                      <Stamp className="w-4 h-4 text-gray-700" />
-                                      <span>
-                                        {isFr
-                                          ? "2. Contrôler & Approuver"
-                                          : "2. Check, Sign & Approve"}
-                                      </span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Award className="w-4 h-4 text-gray-700" />
-                                      <span>
-                                        {isFr
-                                          ? "3. Délivrer le Document"
-                                          : "3. Seal & Issue Document"}
-                                      </span>
-                                    </>
-                                  )}
+                                  <Award className="w-4 h-4 text-gray-700" />
+                                  <span>
+                                    {isFr
+                                      ? "Délivrer le Document"
+                                      : "Seal & Issue Document"}
+                                  </span>
                                 </h3>
-
-                                {officer.roleTier === "approver_officer" &&
-                                  selectedApp.workflow.verificationOfficerName && (
-                                    <div className="p-3 bg-emerald-50 border border-emerald-300 text-xs flex items-center justify-between gap-3">
-                                      <span className="text-emerald-900 font-medium">
-                                        {isFr ? "Vérifié par :" : "Verified by:"}{" "}
-                                        <strong>
-                                          {selectedApp.workflow.verificationOfficerName}
-                                        </strong>
-                                      </span>
-                                      {selectedApp.workflow.verificationSignature && (
-                                        <img
-                                          src={selectedApp.workflow.verificationSignature}
-                                          alt="Tier 1 Signature"
-                                          className="h-9 bg-white px-2 py-0.5 border border-emerald-300 object-contain"
-                                        />
-                                      )}
-                                    </div>
-                                  )}
-
-                                {officer.roleTier === "approver_officer" && (
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                                    <label className="flex items-center gap-2.5 p-3 bg-gray-50 border border-gray-300 cursor-pointer hover:bg-gray-100">
-                                      <input
-                                        type="checkbox"
-                                        checked={docsChecked}
-                                        onChange={(e) => setDocsChecked(e.target.checked)}
-                                        className="w-4 h-4 text-gray-700"
-                                      />
-                                      <span className="font-medium text-gray-800">
-                                        {isFr ? "Documents vérifiés" : "Documents checked & OK"}
-                                      </span>
-                                    </label>
-
-                                    <label className="flex items-center gap-2.5 p-3 bg-gray-50 border border-gray-300 cursor-pointer hover:bg-gray-100">
-                                      <input
-                                        type="checkbox"
-                                        checked={idProofChecked}
-                                        onChange={(e) => setIdProofChecked(e.target.checked)}
-                                        className="w-4 h-4 text-gray-700"
-                                      />
-                                      <span className="font-medium text-gray-800">
-                                        {isFr ? "ID Proof vérifié" : "ID Proof checked & OK"}
-                                      </span>
-                                    </label>
-                                  </div>
-                                )}
 
                                 <input
                                   type="text"
@@ -1288,15 +1236,7 @@ function OfficerPortalContent() {
                                   language={language}
                                   officerName={officer.fullName}
                                   officerId={officer.officerId}
-                                  roleTitle={
-                                    officer.roleTier === "approver_officer"
-                                      ? isFr
-                                        ? "Approbateur"
-                                        : "Approver"
-                                      : isFr
-                                      ? "Chef Service"
-                                      : "Head"
-                                  }
+                                  roleTitle={isFr ? "Chef Service" : "Head"}
                                   value={signatureData}
                                   onChange={setSignatureData}
                                 />
@@ -1343,39 +1283,19 @@ function OfficerPortalContent() {
                                     </button>
                                   )}
 
-                                  {officer.roleTier === "approver_officer" && (
-                                    <button
-                                      type="button"
-                                      disabled={submittingAction}
-                                      onClick={() =>
-                                        handleWorkflowSubmit("check_and_approve")
-                                      }
-                                      className="ml-auto px-5 py-2.5 bg-gray-600 hover:bg-gray-700 disabled:opacity-60 text-white text-xs font-semibold inline-flex items-center gap-2 cursor-pointer"
-                                    >
-                                      {submittingAction && (
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                      )}
-                                      <span>
-                                        {isFr ? "Signer & Approuver" : "Sign & Approve"}
-                                      </span>
-                                    </button>
-                                  )}
-
-                                  {officer.roleTier === "head_of_service" && (
-                                    <button
-                                      type="button"
-                                      disabled={submittingAction}
-                                      onClick={() => handleWorkflowSubmit("head_issue")}
-                                      className="ml-auto px-5 py-2.5 bg-gray-600 hover:bg-gray-700 disabled:opacity-60 text-white text-xs font-semibold inline-flex items-center gap-2 cursor-pointer"
-                                    >
-                                      {submittingAction && (
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                      )}
-                                      <span>
-                                        {isFr ? "Sceller & Délivrer" : "Seal & Issue"}
-                                      </span>
-                                    </button>
-                                  )}
+                                  <button
+                                    type="button"
+                                    disabled={submittingAction}
+                                    onClick={() => handleWorkflowSubmit("head_issue")}
+                                    className="ml-auto px-5 py-2.5 bg-gray-600 hover:bg-gray-700 disabled:opacity-60 text-white text-xs font-semibold inline-flex items-center gap-2 cursor-pointer"
+                                  >
+                                    {submittingAction && (
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    )}
+                                    <span>
+                                      {isFr ? "Sceller & Délivrer" : "Seal & Issue"}
+                                    </span>
+                                  </button>
                                 </div>
                               </div>
                             ) : (

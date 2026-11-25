@@ -42,13 +42,13 @@ export const SERVICES_DATA: ServiceItem[] = [
   {
     id: "passeport-ordinaire",
     code: "PAS-02",
-    titleFr: "Demande de Passeport Ordinaire",
+    titleFr: "Demande de Passeport",
     titleEn: "Passport Application",
     category: "identity",
     ministryFr: "Ministère des Affaires Étrangères et Coopération Internationale",
     ministryEn: "Ministry of Foreign Affairs and International Cooperation",
-    descriptionFr: "Demande officielle de passeport ordinaire pour les citoyens congolais voyageant à l'international.",
-    descriptionEn: "Official passport application for Congolese citizens traveling internationally.",
+    descriptionFr: "Demande officielle de passeport biométrique pour les citoyens congolais voyageant à l'international.",
+    descriptionEn: "Official biometric passport application for Congolese citizens traveling internationally.",
     slaFr: "7 à 10 jours ouvrables",
     slaEn: "7 to 10 business days",
     costFr: "99 USD (payable en monnaie locale ou carte bancaire)",
@@ -368,7 +368,7 @@ export const SAMPLE_APPLICATIONS: CitizenApplication[] = [
   {
     trackingId: "CD-2026-104928",
     serviceId: "passeport-ordinaire",
-    serviceTitle: "Passeport Ordinaire",
+    serviceTitle: "Demande de Passeport",
     applicantName: "Ilunga Tshisekedi Blandine",
     email: "b.ilunga@example.cd",
     phone: "+243 99 876 5432",
@@ -436,8 +436,8 @@ export const FAQS = [
   {
     qFr: "Combien de temps faut-il pour obtenir mon passeport ou ma carte d'identité ?",
     qEn: "How long does it take to get my passport or identity card?",
-    aFr: "Les délais standards sont de 3 à 5 jours ouvrables pour la Carte Nationale d'Identité et de 7 à 10 jours ouvrables pour le passeport ordinaire après validation biométrique.",
-    aEn: "Standard turnaround times are 3 to 5 business days for the National Identity Card and 7 to 10 business days for the ordinary passport after biometric confirmation.",
+    aFr: "Les délais standards sont de 3 à 5 jours ouvrables pour la Carte Nationale d'Identité et de 7 à 10 jours ouvrables pour le passeport biométrique après validation biométrique.",
+    aEn: "Standard turnaround times are 3 to 5 business days for the National Identity Card and 7 to 10 business days for the biometric passport after biometric confirmation.",
   },
   {
     qFr: "Comment puis-je vérifier l'authenticité d'un document délivré par l'État ?",
@@ -452,3 +452,22 @@ export const FAQS = [
     aEn: "Payments can be made via Mobile Money (M-Pesa, Airtel Money, Orange Money), secured credit/debit cards, or directly at authorized partner bank teller windows.",
   },
 ];
+
+export function getLocalizedServiceTitle(
+  serviceId: string,
+  fallbackTitle: string,
+  language: "fr" | "en"
+): string {
+  const isFr = language === "fr";
+  const found = SERVICES_DATA.find((s) => s.id === serviceId);
+  if (found) {
+    return isFr ? found.titleFr : found.titleEn;
+  }
+  if (serviceId === "cni") {
+    return isFr ? "Carte Nationale d'Identité" : "National Identity Card";
+  }
+  if (serviceId === "passport") {
+    return isFr ? "Demande de Passeport" : "Passport Application";
+  }
+  return fallbackTitle;
+}

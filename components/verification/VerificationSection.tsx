@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { CitizenApplication, Language, VerifiedDocument } from "../../types";
-import { SAMPLE_DOCUMENTS } from "../../data/services";
+import { SAMPLE_DOCUMENTS, getLocalizedServiceTitle } from "../../data/services";
 import { SignedDocumentAndIdProofViewer } from "../officer/SignedDocumentAndIdProofViewer";
 import { ShieldCheck, CheckCircle2, QrCode, Search, Building2, Calendar, AlertCircle, Loader2 } from "lucide-react";
 
@@ -12,20 +12,19 @@ interface VerificationSectionProps {
 
 export const VerificationSection: React.FC<VerificationSectionProps> = ({ language }) => {
   const isFr = language === "fr";
-  const [docNumber, setDocNumber] = useState("DOC-CD-99412");
-  const [verifiedDoc, setVerifiedDoc] = useState<VerifiedDocument | null>(
-    SAMPLE_DOCUMENTS["DOC-CD-99412"] || null
-  );
+  const [docNumber, setDocNumber] = useState("");
+  const [verifiedDoc, setVerifiedDoc] = useState<VerifiedDocument | null>(null);
   const [liveVerifiedApp, setLiveVerifiedApp] = useState<CitizenApplication | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    const clean = docNumber.trim().toUpperCase();
+    const clean = docNumber.trim().replace(/\s+/g, "").toUpperCase();
     if (!clean) return;
 
     setErrorMsg(null);
+    setVerifiedDoc(null);
     setLiveVerifiedApp(null);
 
     if (SAMPLE_DOCUMENTS[clean]) {
@@ -41,9 +40,21 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({ langua
       );
       if (res.ok) {
         const data = await res.json();
-        if (data.application) {
+        const app: CitizenApplication | undefined = data.application;
+        if (app) {
+          const isOfficiallyApproved =
+            (app.status === "approved" || app.status === "ready") &&
+            Boolean(app.issuedNumber || app.workflow?.issuedDocumentNumber);
+          if (!isOfficiallyApproved) {
+            setErrorMsg(
+              isFr
+                ? "Ce dossier est en cours de traitement et n'a pas encore de numéro officiel délivré. Utilisez « Suivi Demande » pour suivre son avancement."
+                : "This application is still in progress and has not yet received an approved official document number. Use 'Track Application' to check status."
+            );
+            return;
+          }
           setVerifiedDoc(null);
-          setLiveVerifiedApp(data.application);
+          setLiveVerifiedApp(app);
           return;
         }
       }
@@ -53,7 +64,6 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({ langua
       setIsVerifying(false);
     }
 
-    setVerifiedDoc(null);
     setErrorMsg(
       isFr
         ? "Numéro de document non répertorié ou certificat invalide dans le registre central."
@@ -62,7 +72,7 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({ langua
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8">
       {/* Header */}
       <div className="text-center space-y-2">
         <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-medium mb-1">
@@ -72,19 +82,23 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({ langua
         <h2 className="text-xl font-medium text-slate-900 tracking-tight">
           {isFr ? "Vérification d'authenticité d'un document d'État" : "Verify Official Government Document"}
         </h2>
-        <p className="text-xs text-slate-500 font-normal max-w-md mx-auto">
+        <p className="text-xs text-slate-500 font-normal max-w-lg mx-auto">
           {isFr
-            ? "Assurez-vous de l'authenticité légale d'un acte d'état civil, d'un extrait de casier judiciaire ou d'un certificat national."
-            : "Confirm the legal authenticity of a civil registry act, criminal record certificate or national document."}
+            ? "Saisissez le numéro officiel figurant sur votre document (Certificat de Nationalité, Passeport, Carte CNI, Acte d'État Civil, Permis) pour vérifier son authenticité."
+            : "Enter the official document number printed on your document (Nationality Certificate, Passport, National ID, Civil Act, Permit) to verify its authenticity."}
         </p>
 
         {/* Search input */}
-        <form onSubmit={handleVerify} className="max-w-md mx-auto pt-4">
+        <form onSubmit={handleVerify} className="max-w-lg mx-auto pt-4">
           <div className="flex items-center gap-2 bg-white border border-slate-300 rounded-xl p-1.5 shadow-xs focus-within:border-emerald-600 focus-within:ring-1 focus-within:ring-emerald-600">
-            <Search className="w-4 h-4 text-slate-400 ml-2" />
+            <Search className="w-4 h-4 text-slate-400 ml-2 shrink-0" />
             <input
               type="text"
-              placeholder={isFr ? "Ex: DOC-CD-99412 ou DOC-CD-78210" : "Ex: DOC-CD-99412"}
+              placeholder={
+                isFr
+                  ? "Ex: NAT-CD-2026-350142, OP-CD-..., NIN-CD-..."
+                  : "Ex: NAT-CD-2026-350142, OP-CD-..., NIN-CD-..."
+              }
               value={docNumber}
               onChange={(e) => setDocNumber(e.target.value)}
               className="w-full text-xs text-slate-800 bg-transparent focus:outline-none"
@@ -92,15 +106,15 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({ langua
             <button
               type="submit"
               disabled={isVerifying}
-              className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5"
+              className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5 shrink-0"
             >
               {isVerifying && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>{isFr ? "Vérifier" : "Verify"}</span>
             </button>
           </div>
 
-          <div className="flex items-center justify-center gap-2 pt-2 text-[11px] text-slate-500">
-            <span>{isFr ? "Tester avec :" : "Test codes:"}</span>
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-[11px] text-slate-500">
+            <span>{isFr ? "Exemples démo :" : "Demo samples:"}</span>
             <button
               type="button"
               onClick={() => {
@@ -234,12 +248,44 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({ langua
 
       {/* Live Database Document & ID Proof Presentation with Dual Officer Signatures */}
       {liveVerifiedApp && (
-        <SignedDocumentAndIdProofViewer
-          application={liveVerifiedApp}
-          language={language}
-          defaultMode="both"
-          showPrintButton={true}
-        />
+        <div className="space-y-4">
+          <div className="bg-white rounded-xl border border-emerald-200 p-4 shadow-xs flex flex-wrap items-center justify-between gap-3 no-print">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shrink-0">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-emerald-800">
+                  {isFr
+                    ? "Document Authentique & Certifié Conforme"
+                    : "Authentic & Certified Government Document"}
+                </div>
+                <div className="text-[11px] text-slate-500">
+                  {getLocalizedServiceTitle(
+                    liveVerifiedApp.serviceId,
+                    liveVerifiedApp.serviceTitle,
+                    language
+                  )}{" "}
+                  &bull; {liveVerifiedApp.applicantName}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs font-semibold bg-emerald-50 border border-emerald-200 px-3 py-1 rounded text-emerald-800">
+                {liveVerifiedApp.issuedNumber ||
+                  liveVerifiedApp.workflow?.issuedDocumentNumber}
+              </span>
+            </div>
+          </div>
+
+          <SignedDocumentAndIdProofViewer
+            application={liveVerifiedApp}
+            language={language}
+            defaultMode="both"
+            showPrintButton={true}
+          />
+        </div>
       )}
 
       {errorMsg && (

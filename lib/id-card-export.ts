@@ -155,6 +155,21 @@ export async function downloadOfficialCardOrDocumentPng(
     application.serviceId === "passport" ||
     (isFullApp(application) && application.tableName === "passport_applications");
 
+  const isBirthCertificate =
+    application.serviceId === "acte-naissance" ||
+    application.serviceId === "birth-certificate" ||
+    (isFullApp(application) && application.tableName === "birth_applications");
+
+  const isMarriageCertificate =
+    application.serviceId === "acte-mariage" ||
+    application.serviceId === "marriage-certificate" ||
+    (isFullApp(application) && application.tableName === "marriage_applications");
+
+  const isDeathCertificate =
+    application.serviceId === "acte-deces" ||
+    application.serviceId === "death-certificate" ||
+    (isFullApp(application) && application.tableName === "death_applications");
+
   const localizedTitle = getLocalizedServiceTitle(
     application.serviceId,
     application.serviceTitle,
@@ -566,6 +581,462 @@ export async function downloadOfficialCardOrDocumentPng(
     ctx.lineWidth = 2;
     drawRoundedRect(ctx, endX, pageY, pageW, pageH, 20);
     ctx.stroke();
+  } else if (isBirthCertificate) {
+    // Distinct Civil Registry Forest Emerald & Parchment Birth Certificate Extract PNG
+    const dMap = isFullApp(application) ? application.details : {};
+    canvas.width = 1100;
+    canvas.height = 980;
+    ctx.fillStyle = "#fcfaf2";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = "#064e3b";
+    ctx.lineWidth = 5;
+    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+    ctx.strokeStyle = "#6ee7b7";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
+
+    // Forest Emerald Civil Registry Top Banner
+    ctx.fillStyle = "#064e3b";
+    ctx.fillRect(30, 30, canvas.width - 60, 128);
+    if (emblemImg) {
+      ctx.drawImage(emblemImg, 54, 48, 90, 90);
+      ctx.save();
+      ctx.globalAlpha = 0.05;
+      ctx.drawImage(emblemImg, 390, 360, 320, 320);
+      ctx.restore();
+    }
+
+    ctx.fillStyle = "#fcd116";
+    ctx.font = "bold 16px Arial, sans-serif";
+    ctx.fillText("REPUBLIQUE DEMOCRATIQUE DU CONGO", 164, 72);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 20px Arial, sans-serif";
+    ctx.fillText(
+      isFr ? "ETAT CIVIL • REGISTRE DES NAISSANCES" : "CIVIL REGISTRY • REGISTER OF BIRTHS",
+      164,
+      102
+    );
+    ctx.fillStyle = "#d1fae5";
+    ctx.font = "15px Arial, sans-serif";
+    ctx.fillText(application.collectionPoint || application.city, 164, 130);
+
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#a7f3d0";
+    ctx.font = "bold 12px Arial, sans-serif";
+    ctx.fillText(isFr ? "ACTE N°" : "BIRTH ACT NO.", canvas.width - 54, 76);
+    ctx.fillStyle = "#fcd116";
+    ctx.font = "bold 22px monospace";
+    ctx.fillText(issuedNumber, canvas.width - 54, 108);
+    ctx.textAlign = "left";
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#064e3b";
+    ctx.font = "bold 26px Georgia, serif";
+    ctx.fillText(
+      isFr ? "EXTRAIT D'ACTE DE NAISSANCE" : "OFFICIAL BIRTH CERTIFICATE EXTRACT",
+      canvas.width / 2,
+      206
+    );
+    ctx.fillStyle = "#475569";
+    ctx.font = "italic 14px Georgia, serif";
+    ctx.fillText(
+      isFr
+        ? "Certifié conforme aux registres de l'État Civil de la République"
+        : "Certified true extract from the Official Civil Birth Register",
+      canvas.width / 2,
+      234
+    );
+    ctx.textAlign = "left";
+
+    // Section I: Registered Child
+    ctx.fillStyle = "#ecfdf5";
+    ctx.fillRect(58, 260, canvas.width - 116, 36);
+    ctx.strokeStyle = "#064e3b";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(58, 260, canvas.width - 116, 210);
+    ctx.fillStyle = "#064e3b";
+    ctx.font = "bold 14px Arial, sans-serif";
+    ctx.fillText(
+      isFr ? "I. IDENTITE DE L'ENFANT DECLARE" : "I. REGISTERED CHILD DETAILS",
+      76,
+      284
+    );
+
+    const drawBirthCell = (lbl: string, val: string, xPos: number, yPos: number) => {
+      ctx.fillStyle = "#64748b";
+      ctx.font = "bold 12px Arial, sans-serif";
+      ctx.fillText(lbl.toUpperCase(), xPos, yPos);
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "bold 16px Arial, sans-serif";
+      ctx.fillText(val.slice(0, 44), xPos, yPos + 22);
+    };
+    drawBirthCell(
+      isFr ? "Nom complet de l'enfant" : "Child Full Name",
+      application.applicantName.toUpperCase(),
+      76,
+      324
+    );
+    drawBirthCell(
+      isFr ? "Délivré le" : "Issue Date",
+      sealDate,
+      620,
+      324
+    );
+    drawBirthCell(
+      isFr ? "Date & Heure de naissance" : "Date & Time of Birth",
+      `${idSummary?.birthDate || dMap["Birth Date"] || "—"}${dMap["Birth Time"] ? ` • ${dMap["Birth Time"]}` : ""}`,
+      76,
+      382
+    );
+    drawBirthCell(
+      isFr ? "Sexe" : "Sex",
+      String(dMap["Gender"] || "M"),
+      620,
+      382
+    );
+    drawBirthCell(
+      isFr ? "Lieu de naissance" : "Birthplace",
+      String(idSummary?.birthPlace || dMap["Birth Place"] || application.city),
+      76,
+      436
+    );
+    drawBirthCell(
+      isFr ? "Maternité / Hôpital" : "Hospital / Maternity",
+      String(dMap["Hospital / Doctor"] || "—"),
+      620,
+      436
+    );
+
+    // Section II: Parents Lineage
+    ctx.fillStyle = "#ecfdf5";
+    ctx.fillRect(58, 492, canvas.width - 116, 36);
+    ctx.strokeRect(58, 492, canvas.width - 116, 175);
+    ctx.fillStyle = "#064e3b";
+    ctx.font = "bold 14px Arial, sans-serif";
+    ctx.fillText(
+      isFr ? "II. FILIATION PARENTALE & DECLARATION" : "II. PARENTS' LINEAGE & DECLARATION",
+      76,
+      516
+    );
+    drawBirthCell(isFr ? "Père" : "Father", String(dMap["Father Name & ID"] || "—"), 76, 558);
+    drawBirthCell(isFr ? "Mère" : "Mother", String(dMap["Mother Name & ID"] || "—"), 560, 558);
+    drawBirthCell(
+      isFr ? "Province d'origine" : "Province / Origin",
+      String(dMap["Province / Origin"] || application.city),
+      76,
+      624
+    );
+    drawBirthCell(
+      isFr ? "Déclarant" : "Declarant",
+      String(dMap["Declarant"] || "Père"),
+      560,
+      624
+    );
+
+    const bSigY = 696;
+    const drawBirthSig = (sx: number, title: string, img: HTMLImageElement | null, name: string) => {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(sx, bSigY, 360, 168);
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(sx, bSigY, 360, 168);
+      ctx.fillStyle = "#064e3b";
+      ctx.font = "bold 14px Arial, sans-serif";
+      ctx.fillText(title.toUpperCase(), sx + 16, bSigY + 26);
+      if (img) ctx.drawImage(img, sx + 24, bSigY + 40, 230, 78);
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "bold 15px Arial, sans-serif";
+      ctx.fillText(name || "—", sx + 16, bSigY + 148);
+    };
+    drawBirthSig(58, isFr ? "Vérification" : "Verification", verSigImg, wf.verificationOfficerName || "");
+    drawBirthSig(448, isFr ? "Approbation" : "Approver", appSigImg, wf.approverOfficerName || "");
+    if (wf.verificationSignature && wf.approverSignature) {
+      drawSealOnCanvas(ctx, 945, bSigY + 84, 82, issuedNumber, sealDate);
+    }
+
+    ctx.fillStyle = "#064e3b";
+    ctx.fillRect(30, canvas.height - 68, canvas.width - 60, 38);
+    ctx.fillStyle = "#fcd116";
+    ctx.font = "bold 14px monospace";
+    ctx.fillText(
+      `REPUBLIQUE DEMOCRATIQUE DU CONGO  •  ETAT CIVIL  •  ${issuedNumber}  •  ${sealDate}`,
+      56,
+      canvas.height - 44
+    );
+  } else if (isMarriageCertificate) {
+    // Regal Burgundy & Gold Civil Marriage Certificate PNG
+    const dMap = isFullApp(application) ? application.details : {};
+    canvas.width = 1100;
+    canvas.height = 1010;
+    ctx.fillStyle = "#fefcf7";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = "#6b102f";
+    ctx.lineWidth = 5;
+    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+    ctx.strokeStyle = "#d97706";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
+
+    ctx.fillStyle = "#6b102f";
+    ctx.fillRect(30, 30, canvas.width - 60, 128);
+    if (emblemImg) {
+      ctx.drawImage(emblemImg, 54, 48, 90, 90);
+      ctx.save();
+      ctx.globalAlpha = 0.05;
+      ctx.drawImage(emblemImg, 390, 360, 320, 320);
+      ctx.restore();
+    }
+
+    ctx.fillStyle = "#fcd116";
+    ctx.font = "bold 16px Arial, sans-serif";
+    ctx.fillText("REPUBLIQUE DEMOCRATIQUE DU CONGO", 164, 72);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 20px Arial, sans-serif";
+    ctx.fillText(
+      isFr ? "ETAT CIVIL • REGISTRE DES MARIAGES" : "CIVIL REGISTRY • MARRIAGE REGISTER",
+      164,
+      102
+    );
+    ctx.fillStyle = "#ffe4e6";
+    ctx.font = "15px Arial, sans-serif";
+    ctx.fillText(application.collectionPoint || application.city, 164, 130);
+
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#fecdd3";
+    ctx.font = "bold 12px Arial, sans-serif";
+    ctx.fillText(isFr ? "ACTE DE MARIAGE N°" : "MARRIAGE ACT NO.", canvas.width - 54, 76);
+    ctx.fillStyle = "#fcd116";
+    ctx.font = "bold 22px monospace";
+    ctx.fillText(issuedNumber, canvas.width - 54, 108);
+    ctx.textAlign = "left";
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#6b102f";
+    ctx.font = "bold 25px Georgia, serif";
+    ctx.fillText(
+      isFr ? "CERTIFICAT D'ENREGISTREMENT DE MARIAGE" : "OFFICIAL MARRIAGE REGISTRATION CERTIFICATE",
+      canvas.width / 2,
+      206
+    );
+    ctx.fillStyle = "#475569";
+    ctx.font = "italic 14px Georgia, serif";
+    ctx.fillText(
+      String(dMap["Marriage Date & Regime"] || sealDate),
+      canvas.width / 2,
+      236
+    );
+    ctx.textAlign = "left";
+
+    const drawSpouseCard = (x: number, title: string, prefix: "Groom" | "Bride") => {
+      ctx.fillStyle = "#fff1f2";
+      ctx.fillRect(x, 266, 480, 38);
+      ctx.strokeStyle = "#6b102f";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x, 266, 480, 420);
+      ctx.fillStyle = "#6b102f";
+      ctx.font = "bold 14px Arial, sans-serif";
+      ctx.fillText(title.toUpperCase(), x + 16, 290);
+
+      const items: [string, string][] = [
+        [isFr ? "Nom & ID" : "Name & ID", String(dMap[prefix] || "—")],
+        [isFr ? "Naissance" : "Birth", String(dMap[`${prefix} Birth`] || "—")],
+        [isFr ? "Qualité" : "Details", String(dMap[`${prefix} Details`] || "—")],
+        [isFr ? "Domicile" : "Residence", String(dMap[`${prefix} Residence`] || dMap["Address"] || "—")],
+        [isFr ? "Filiation" : "Parents", String(dMap[`${prefix} Parents`] || "—")],
+      ];
+      let sy = 336;
+      for (const [k, v] of items) {
+        ctx.fillStyle = "#64748b";
+        ctx.font = "bold 11px Arial, sans-serif";
+        ctx.fillText(k.toUpperCase(), x + 16, sy);
+        ctx.fillStyle = "#0f172a";
+        ctx.font = "bold 14px Arial, sans-serif";
+        ctx.fillText(v.slice(0, 44), x + 16, sy + 20);
+        sy += 66;
+      }
+    };
+    drawSpouseCard(56, isFr ? "I. L'Époux (Contractant)" : "I. The Groom", "Groom");
+    drawSpouseCard(564, isFr ? "II. L'Épouse (Contractante)" : "II. The Bride", "Bride");
+
+    const mSigY = 720;
+    const drawMarriageSig = (sx: number, title: string, img: HTMLImageElement | null, name: string) => {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(sx, mSigY, 360, 168);
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(sx, mSigY, 360, 168);
+      ctx.fillStyle = "#6b102f";
+      ctx.font = "bold 14px Arial, sans-serif";
+      ctx.fillText(title.toUpperCase(), sx + 16, mSigY + 26);
+      if (img) ctx.drawImage(img, sx + 24, mSigY + 40, 230, 78);
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "bold 15px Arial, sans-serif";
+      ctx.fillText(name || "—", sx + 16, mSigY + 148);
+    };
+    drawMarriageSig(56, isFr ? "Vérification" : "Verification", verSigImg, wf.verificationOfficerName || "");
+    drawMarriageSig(446, isFr ? "Approbation" : "Approver", appSigImg, wf.approverOfficerName || "");
+    if (wf.verificationSignature && wf.approverSignature) {
+      drawSealOnCanvas(ctx, 945, mSigY + 84, 82, issuedNumber, sealDate);
+    }
+
+    ctx.fillStyle = "#6b102f";
+    ctx.fillRect(30, canvas.height - 68, canvas.width - 60, 38);
+    ctx.fillStyle = "#fcd116";
+    ctx.font = "bold 14px monospace";
+    ctx.fillText(
+      `REPUBLIQUE DEMOCRATIQUE DU CONGO  •  MARIAGE  •  ${issuedNumber}  •  ${sealDate}`,
+      56,
+      canvas.height - 44
+    );
+  } else if (isDeathCertificate) {
+    // Solemn Charcoal Slate Civil Death Certificate PNG
+    const dMap = isFullApp(application) ? application.details : {};
+    canvas.width = 1100;
+    canvas.height = 1040;
+    ctx.fillStyle = "#fbfcfd";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = "#1e293b";
+    ctx.lineWidth = 5;
+    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+    ctx.strokeStyle = "#94a3b8";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
+
+    ctx.fillStyle = "#1e293b";
+    ctx.fillRect(30, 30, canvas.width - 60, 128);
+    if (emblemImg) {
+      ctx.drawImage(emblemImg, 54, 48, 90, 90);
+      ctx.save();
+      ctx.globalAlpha = 0.05;
+      ctx.drawImage(emblemImg, 390, 360, 320, 320);
+      ctx.restore();
+    }
+
+    ctx.fillStyle = "#fcd116";
+    ctx.font = "bold 16px Arial, sans-serif";
+    ctx.fillText("REPUBLIQUE DEMOCRATIQUE DU CONGO", 164, 72);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 20px Arial, sans-serif";
+    ctx.fillText(
+      isFr ? "ETAT CIVIL • REGISTRE DES DECES" : "CIVIL REGISTRY • DEATH REGISTER",
+      164,
+      102
+    );
+    ctx.fillStyle = "#cbd5e1";
+    ctx.font = "15px Arial, sans-serif";
+    ctx.fillText(application.collectionPoint || application.city, 164, 130);
+
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#cbd5e1";
+    ctx.font = "bold 12px Arial, sans-serif";
+    ctx.fillText(isFr ? "ACTE DE DECES N°" : "DEATH ACT NO.", canvas.width - 54, 76);
+    ctx.fillStyle = "#fcd116";
+    ctx.font = "bold 22px monospace";
+    ctx.fillText(issuedNumber, canvas.width - 54, 108);
+    ctx.textAlign = "left";
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#0f172a";
+    ctx.font = "bold 25px Georgia, serif";
+    ctx.fillText(
+      isFr ? "ACTE DE DECES & CERTIFICAT D'INHUMATION" : "OFFICIAL DEATH REGISTRATION CERTIFICATE",
+      canvas.width / 2,
+      206
+    );
+    ctx.textAlign = "left";
+
+    const drawDeathCell = (lbl: string, val: string, xPos: number, yPos: number) => {
+      ctx.fillStyle = "#64748b";
+      ctx.font = "bold 11px Arial, sans-serif";
+      ctx.fillText(lbl.toUpperCase(), xPos, yPos);
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "bold 15px Arial, sans-serif";
+      ctx.fillText(val.slice(0, 44), xPos, yPos + 20);
+    };
+
+    // Section I: Deceased
+    ctx.fillStyle = "#f1f5f9";
+    ctx.fillRect(58, 240, canvas.width - 116, 36);
+    ctx.strokeStyle = "#475569";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(58, 240, canvas.width - 116, 210);
+    ctx.fillStyle = "#1e293b";
+    ctx.font = "bold 14px Arial, sans-serif";
+    ctx.fillText(isFr ? "I. IDENTITE DU DEFUNT" : "I. DECEASED PERSON DETAILS", 76, 264);
+
+    drawDeathCell(isFr ? "Nom Complet du Défunt" : "Deceased Full Name", application.applicantName.toUpperCase(), 76, 304);
+    drawDeathCell("ID / NIN", String(dMap["Deceased ID"] || "—"), 620, 304);
+    drawDeathCell(
+      isFr ? "Naissance" : "Birth Date & Place",
+      [idSummary?.birthDate || dMap["Birth Date"], idSummary?.birthPlace || dMap["Birth Place"]].filter(Boolean).join(" • ") || "—",
+      76,
+      360
+    );
+    drawDeathCell(
+      isFr ? "Sexe & État Civil" : "Sex & Marital Status",
+      `${dMap["Gender"] || "M"} • ${dMap["Marital Status"] || "—"}`,
+      620,
+      360
+    );
+    drawDeathCell(isFr ? "Dernier Domicile" : "Last Residence", String(dMap["Address"] || idSummary?.address || "—"), 76, 416);
+    drawDeathCell(isFr ? "Profession" : "Occupation", String(dMap["Occupation"] || "—"), 620, 416);
+
+    // Section II: Medical & Declarant
+    ctx.fillStyle = "#f1f5f9";
+    ctx.fillRect(58, 474, canvas.width - 116, 36);
+    ctx.strokeRect(58, 474, canvas.width - 116, 224);
+    ctx.fillStyle = "#1e293b";
+    ctx.font = "bold 14px Arial, sans-serif";
+    ctx.fillText(
+      isFr ? "II. CONSTATATION MEDICALE & DECLARANT" : "II. MEDICAL CERTIFICATION & DECLARANT",
+      76,
+      498
+    );
+    drawDeathCell(
+      isFr ? "Date, Heure & Lieu" : "Death Date, Time & Place",
+      `${dMap["Death Date & Place"] || sealDate}${dMap["Death Time"] ? ` • ${dMap["Death Time"]}` : ""}`,
+      76,
+      540
+    );
+    drawDeathCell(isFr ? "Avis Médical" : "Medical Notice", String(dMap["Medical Notice"] || "—"), 620, 540);
+    drawDeathCell(isFr ? "Hôpital / Médecin" : "Hospital / Physician", String(dMap["Hospital / Doctor"] || "—"), 76, 600);
+    drawDeathCell(isFr ? "Déclarant" : "Declarant", String(dMap["Declarant"] || "—"), 620, 600);
+    drawDeathCell(isFr ? "Domicile Déclarant" : "Declarant Residence", String(dMap["Declarant Residence"] || "—"), 76, 658);
+    drawDeathCell(isFr ? "Date de délivrance" : "Issue Date", sealDate, 620, 658);
+
+    const dSigY = 736;
+    const drawDeathSig = (sx: number, title: string, img: HTMLImageElement | null, name: string) => {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(sx, dSigY, 360, 168);
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(sx, dSigY, 360, 168);
+      ctx.fillStyle = "#1e293b";
+      ctx.font = "bold 14px Arial, sans-serif";
+      ctx.fillText(title.toUpperCase(), sx + 16, dSigY + 26);
+      if (img) ctx.drawImage(img, sx + 24, dSigY + 40, 230, 78);
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "bold 15px Arial, sans-serif";
+      ctx.fillText(name || "—", sx + 16, dSigY + 148);
+    };
+    drawDeathSig(58, isFr ? "Vérification" : "Verification", verSigImg, wf.verificationOfficerName || "");
+    drawDeathSig(448, isFr ? "Approbation" : "Approver", appSigImg, wf.approverOfficerName || "");
+    if (wf.verificationSignature && wf.approverSignature) {
+      drawSealOnCanvas(ctx, 945, dSigY + 84, 82, issuedNumber, sealDate);
+    }
+
+    ctx.fillStyle = "#1e293b";
+    ctx.fillRect(30, canvas.height - 68, canvas.width - 60, 38);
+    ctx.fillStyle = "#fcd116";
+    ctx.font = "bold 14px monospace";
+    ctx.fillText(
+      `REPUBLIQUE DEMOCRATIQUE DU CONGO  •  DECES  •  ${issuedNumber}  •  ${sealDate}`,
+      56,
+      canvas.height - 44
+    );
   } else {
     // Official Certificate PNG for all non-CNI services (including full service-specific details)
     const detailsObj = isFullApp(application) ? application.details : {};
@@ -721,7 +1192,17 @@ export async function downloadOfficialCardOrDocumentPng(
   const a = document.createElement("a");
   a.href = url;
   a.download = `${
-    isNationalId ? "National-ID" : isPassport ? "Passport" : "Official-Document"
+    isNationalId
+      ? "National-ID"
+      : isPassport
+      ? "Passport"
+      : isBirthCertificate
+      ? "Birth-Certificate"
+      : isMarriageCertificate
+      ? "Marriage-Certificate"
+      : isDeathCertificate
+      ? "Death-Certificate"
+      : "Official-Document"
   }-${issuedNumber}.png`;
   document.body.appendChild(a);
   a.click();

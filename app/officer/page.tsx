@@ -11,12 +11,12 @@ import {
   OfficerProfile,
   OfficerRoleTier,
   SupportingDocumentItem,
-} from "@/types";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { SignaturePad } from "@/components/officer/SignaturePad";
-import { SignedDocumentAndIdProofViewer } from "@/components/officer/SignedDocumentAndIdProofViewer";
-import { VerificationOfficerWorkspace } from "@/components/officer/VerificationOfficerWorkspace";
+} from "../../types";
+import { Navbar } from "../../components/layout/Navbar";
+import { Footer } from "../../components/layout/Footer";
+import { SignaturePad } from "../../components/officer/SignaturePad";
+import { SignedDocumentAndIdProofViewer } from "../../components/officer/SignedDocumentAndIdProofViewer";
+import { VerificationOfficerWorkspace } from "../../components/officer/VerificationOfficerWorkspace";
 import {
   AlertCircle,
   ArrowLeft,

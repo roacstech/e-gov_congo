@@ -64,6 +64,14 @@ export const Footer: React.FC<FooterProps> = ({ language }) => {
                   {isFr ? "Création d'Entreprise (GUCE)" : "Business Creation (GUCE)"}
                 </span>
               </li>
+              <li>
+                <a
+                  href="/track"
+                  className="text-blue-600 hover:text-blue-700 font-medium transition-colors cursor-pointer"
+                >
+                  {isFr ? "→ Suivi Officiel de Dossier" : "→ Track Application Status"}
+                </a>
+              </li>
             </ul>
           </div>
 

@@ -671,8 +671,7 @@ export default function Home() {
         onClose={() => setApplyService(null)}
         onSubmitted={handleApplicationSubmitted}
         onTrackNow={(trackId) => {
-          setActiveTrackingId(trackId);
-          setActiveTab("track");
+          router.push(`/track?id=${encodeURIComponent(trackId)}`);
         }}
       />
 

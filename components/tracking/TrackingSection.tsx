@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { CitizenApplication, Language } from "../../types";
 import { SignedDocumentAndIdProofViewer } from "../officer/SignedDocumentAndIdProofViewer";
 import { getLocalizedServiceTitle } from "../../data/services";
@@ -13,6 +14,7 @@ import {
   ArrowRight,
   Printer,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 
 interface TrackingSectionProps {
@@ -43,6 +45,36 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
 
   const [hasSearched, setHasSearched] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [realExamples, setRealExamples] = useState<{ trackingId: string; applicantName: string }[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadRealData() {
+      try {
+        const res = await fetch("/api/track?recent=1");
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.recent && Array.isArray(data.recent) && data.recent.length > 0) {
+            setRealExamples(data.recent);
+            // If user did not specify initialTrackingId, auto-select first real application
+            if (!initialTrackingId) {
+              setQuery(data.recent[0].trackingId);
+              runSearch(data.recent[0].trackingId);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error loading real tracking examples:", err);
+      }
+    }
+    loadRealData();
+    if (initialTrackingId) {
+      runSearch(initialTrackingId);
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [initialTrackingId]);
 
   const runSearch = async (searchText: string) => {
     const clean = searchText.trim();
@@ -52,7 +84,7 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
 
     try {
       const res = await fetch(
-        `/api/officer/applications?trackingId=${encodeURIComponent(clean)}&publicLookup=1`,
+        `/api/track?id=${encodeURIComponent(clean)}`,
         { cache: "no-store" }
       );
       if (res.ok) {
@@ -135,18 +167,17 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
           </div>
 
           {/* Quick preset chips */}
-          <div className="flex items-center justify-center gap-2 pt-2 text-[11px] text-slate-500">
-            <span>{isFr ? "Exemples :" : "Quick examples:"}</span>
-            {applications.slice(0, 3).map((app) => (
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-[11px] text-slate-500">
+            <span>{isFr ? "Exemples en direct :" : "Live examples:"}</span>
+            {(realExamples.length > 0 ? realExamples : applications).slice(0, 4).map((app) => (
               <button
                 key={app.trackingId}
                 type="button"
                 onClick={() => {
                   setQuery(app.trackingId);
-                  setActiveResult(app);
-                  setHasSearched(true);
+                  runSearch(app.trackingId);
                 }}
-                className="font-mono text-blue-600 hover:underline cursor-pointer"
+                className="font-mono text-blue-600 hover:underline cursor-pointer bg-blue-50/60 px-2 py-0.5 rounded border border-blue-100"
               >
                 {app.trackingId}
               </button>
@@ -161,12 +192,20 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
           {/* Top meta */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-slate-100">
             <div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
                 <span className="font-mono text-xs font-medium text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded">
                   {activeResult.trackingId}
                 </span>
                 <span className="text-xs text-slate-400">•</span>
                 <span className="text-xs text-slate-500">{activeResult.submittedAt}</span>
+                <span className="text-xs text-slate-400">•</span>
+                <Link
+                  href={`/track?id=${encodeURIComponent(activeResult.trackingId)}`}
+                  className="text-xs text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1 font-medium"
+                >
+                  <span>{isFr ? "Ouvrir la page dédiée" : "Open full page"}</span>
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
               </div>
               <h3 className="text-base font-medium text-slate-900">
                 {getLocalizedServiceTitle(activeResult.serviceId, activeResult.serviceTitle, language)}

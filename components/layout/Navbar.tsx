@@ -437,11 +437,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     type="button"
                     onClick={() => {
                       setVerifyDropdownOpen(false);
-                      if (pathname === "/") {
-                        onTabChange("track");
-                      } else {
-                        router.push("/?tab=track");
-                      }
+                      router.push("/track");
                     }}
                     className="w-full text-left py-2.5 px-3 rounded-xl transition-colors cursor-pointer flex items-center gap-3 text-slate-800 hover:text-blue-600 hover:bg-blue-50/70"
                   >
@@ -568,11 +564,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="grid grid-cols-2 gap-2 pb-2 border-b border-blue-400/40">
             <button
               onClick={() => {
-                if (pathname === "/") {
-                  onTabChange("track");
-                } else {
-                  router.push("/?tab=track");
-                }
+                router.push("/track");
                 setMobileMenuOpen(false);
               }}
               className="text-left py-2 font-semibold tracking-wide uppercase text-sm"

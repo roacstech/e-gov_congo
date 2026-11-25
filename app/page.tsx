@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, Suspense } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Language, ServiceCategory, ServiceItem, CitizenApplication } from "../types";
 import { SERVICES_DATA, CATEGORIES, SAMPLE_APPLICATIONS } from "../data/services";
 import { Navbar } from "../components/layout/Navbar";
@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 
 export default function Home() {
+  const router = useRouter();
   const [language, setLanguage] = useState<Language>("fr");
   const isFr = language === "fr";
 
@@ -36,7 +37,16 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Modals state
-  const [detailService, setDetailService] = useState<ServiceItem | null>(null);
+  const [detailService, setDetailService] = useState<ServiceItem | null>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const serviceId = params.get("service");
+      if (serviceId) {
+        return SERVICES_DATA.find((s) => s.id === serviceId) || null;
+      }
+    }
+    return null;
+  });
   const [applyService, setApplyService] = useState<ServiceItem | null>(null);
   const [isOfficerPortalOpen, setIsOfficerPortalOpen] = useState(false);
 
@@ -65,12 +75,12 @@ export default function Home() {
         num: "02",
         service: SERVICES_DATA[1], // Passeport
         pillsFr: [
-          "Passeport biométrique conforme OACI",
+          "Passeport officiel conforme OACI",
           "Délai officiel : 7 à 10 jours ouvrables",
           "Enrôlement biométrique prioritaire",
         ],
         pillsEn: [
-          "ICAO-compliant biometric passport",
+          "Official ICAO-compliant passport",
           "Official SLA: 7 to 10 business days",
           "Priority biometric appointment",
         ],
@@ -173,7 +183,7 @@ export default function Home() {
               {isFr ? (
                 <>
                   L'administration publique simplifiée pour{" "}
-                  <span className="font-bold text-blue-700">tous les citoyens</span>
+                  <span className="font-semibold text-blue-700">tous les citoyens</span>
                 </>
               ) : (
                 <>
@@ -359,7 +369,25 @@ export default function Home() {
 
                       {/* Title */}
                       <h3
-                        onClick={() => setDetailService(item.service)}
+                        onClick={() => {
+                          if (item.service.id === "cni-biometrique") {
+                            router.push("/services/national-id");
+                          } else if (item.service.id === "passeport-ordinaire") {
+                            router.push("/services/passport");
+                          } else if (item.service.id === "certificat-nationalite") {
+                            router.push("/services/nationality-certificate");
+                          } else if (item.service.id === "acte-naissance") {
+                            router.push("/services/birth-certificate");
+                          } else if (item.service.id === "acte-mariage") {
+                            router.push("/services/marriage-certificate");
+                          } else if (item.service.id === "acte-deces") {
+                            router.push("/services/death-certificate");
+                          } else if (item.service.id === "permis-conduire") {
+                            router.push("/services/driving-license");
+                          } else {
+                            router.push(`/services/${item.service.id}`);
+                          }
+                        }}
                         className="text-lg sm:text-xl font-bold text-slate-950 group-hover:text-blue-700 transition-colors cursor-pointer leading-snug mb-2 min-h-[52px]"
                       >
                         {isFr ? item.service.titleFr : item.service.titleEn}
@@ -393,14 +421,50 @@ export default function Home() {
                     <div className="pt-4 border-t border-blue-200/50 flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => setDetailService(item.service)}
+                        onClick={() => {
+                          if (item.service.id === "cni-biometrique") {
+                            router.push("/services/national-id");
+                          } else if (item.service.id === "passeport-ordinaire") {
+                            router.push("/services/passport");
+                          } else if (item.service.id === "certificat-nationalite") {
+                            router.push("/services/nationality-certificate");
+                          } else if (item.service.id === "acte-naissance") {
+                            router.push("/services/birth-certificate");
+                          } else if (item.service.id === "acte-mariage") {
+                            router.push("/services/marriage-certificate");
+                          } else if (item.service.id === "acte-deces") {
+                            router.push("/services/death-certificate");
+                          } else if (item.service.id === "permis-conduire") {
+                            router.push("/services/driving-license");
+                          } else {
+                            router.push(`/services/${item.service.id}`);
+                          }
+                        }}
                         className="flex-1 h-9 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-normal transition-colors cursor-pointer"
                       >
                         {isFr ? "Détails" : "Details"}
                       </button>
                       <button
                         type="button"
-                        onClick={() => setApplyService(item.service)}
+                        onClick={() => {
+                          if (item.service.id === "cni-biometrique") {
+                            router.push("/services/national-id");
+                          } else if (item.service.id === "passeport-ordinaire") {
+                            router.push("/services/passport");
+                          } else if (item.service.id === "certificat-nationalite") {
+                            router.push("/services/nationality-certificate");
+                          } else if (item.service.id === "acte-naissance") {
+                            router.push("/services/birth-certificate");
+                          } else if (item.service.id === "acte-mariage") {
+                            router.push("/services/marriage-certificate");
+                          } else if (item.service.id === "acte-deces") {
+                            router.push("/services/death-certificate");
+                          } else if (item.service.id === "permis-conduire") {
+                            router.push("/services/driving-license");
+                          } else {
+                            router.push(`/services/${item.service.id}`);
+                          }
+                        }}
                         className="flex-1 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium inline-flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                       >
                         <span>{isFr ? "Postuler" : "Apply"}</span>

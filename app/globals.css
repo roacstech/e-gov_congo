@@ -49,6 +49,11 @@ button:focus-visible {
 
 /* Print view optimization for administrative receipts */
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 12mm;
+  }
+
   header,
   footer,
   button,
@@ -56,8 +61,85 @@ button:focus-visible {
     display: none !important;
   }
 
-  body {
+  body, html {
     background: #ffffff !important;
-    color: #000000 !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 11px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
+
+  main {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin: 0 !important;
+  }
+
+  .print-clean-page {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    padding: 20px !important;
+    margin: 0 auto !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+
+/* ========================================================================== */
+/* Official Submission Animated Checkmark                                     */
+/* ========================================================================== */
+@keyframes checkmark-pop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes checkmark-circle {
+  0% {
+    stroke-dashoffset: 150;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes checkmark-check {
+  0% {
+    stroke-dashoffset: 36;
+  }
+  40% {
+    stroke-dashoffset: 36;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-checkmark-pop {
+  animation: checkmark-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.animate-checkmark-circle {
+  stroke-dasharray: 150;
+  stroke-dashoffset: 150;
+  animation: checkmark-circle 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.animate-checkmark-check {
+  stroke-dasharray: 36;
+  stroke-dashoffset: 36;
+  animation: checkmark-check 0.85s cubic-bezier(0.65, 0, 0.45, 1) forwards;
 }

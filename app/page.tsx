@@ -32,24 +32,7 @@ export default function Home() {
   const { language, setLanguage } = useLanguage();
   const isFr = language === "fr";
 
-  // Restore preferred language across pages
-  useEffect(() => {
-    try {
-      const savedLang = localStorage.getItem("egov_language") as Language;
-      if (savedLang === "en" || savedLang === "fr") {
-        setLanguage(savedLang);
-      }
-    } catch {}
-  }, []);
-
-  const handleLanguageChange = (lang: Language) => {
-    setLanguage(lang);
-    try {
-      localStorage.setItem("egov_language", lang);
-    } catch {}
-  };
-
-  const [activeTab, setActiveTab] = useState<"services" | "track" | "verify" | "faq">("services");
+  const [activeTab, setActiveTab] = useState<"services" | "track" | "faq">("services");
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -197,7 +180,7 @@ export default function Home() {
       {/* Top Navbar */}
       <Navbar
         language={language}
-        onLanguageChange={handleLanguageChange}
+        onLanguageChange={setLanguage}
         activeTab={activeTab}
         onTabChange={(tab) => {
           if (tab === "verify") {
@@ -233,7 +216,7 @@ export default function Home() {
             <h1 className="font-heading text-xl sm:text-2xl md:text-[1.85rem] lg:text-[2.35rem] xl:text-[2.75rem] font-bold text-slate-950 tracking-tight max-w-none mx-auto leading-tight md:leading-snug drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)] whitespace-normal md:whitespace-nowrap">
               {isFr ? (
                 <>
-                  L'administration publique simplifiée pour{" "}
+                  {"L'administration publique simplifiée pour"}{" "}
                   <span className="font-semibold text-blue-700">tous les citoyens</span>
                 </>
               ) : (

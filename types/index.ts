@@ -39,7 +39,8 @@ export type ApplicationStatus =
 export type OfficerRoleTier =
   | "verification_officer"
   | "approver_officer"
-  | "head_of_service";
+  | "head_of_service"
+  | "super_admin";
 
 export interface OfficerProfile {
   id: number;

@@ -3,8 +3,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Language, ServiceItem, ServiceOfficer } from "../../types";
+import { ServiceItem, ServiceOfficer } from "../../types";
 import { SERVICES_DATA, CATEGORIES } from "../../data/services";
+import { useLanguage } from "@/components/LanguageProvider";
 import {
   Shield,
   Users,
@@ -34,25 +35,11 @@ import {
 
 export default function SuperAdminPage() {
   const router = useRouter();
-  const [language, setLanguage] = useState<Language>("fr");
+  const { language, setLanguage } = useLanguage();
   const isFr = language === "fr";
 
-  // Sync saved language from localStorage
-  useEffect(() => {
-    try {
-      const savedLang = localStorage.getItem("egov_language") as Language;
-      if (savedLang === "en" || savedLang === "fr") {
-        setLanguage(savedLang);
-      }
-    } catch {}
-  }, []);
-
   const toggleLanguage = () => {
-    const nextLang = isFr ? "en" : "fr";
-    setLanguage(nextLang);
-    try {
-      localStorage.setItem("egov_language", nextLang);
-    } catch {}
+    setLanguage(isFr ? "en" : "fr");
   };
 
   // Auth State - Default pre-filled credentials for 1-click access

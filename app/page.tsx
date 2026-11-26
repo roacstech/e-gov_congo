@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ServiceCategory, ServiceItem, CitizenApplication } from "../types";
+import { ServiceCategory, ServiceItem, CitizenApplication, Language } from "../types";
 import { SERVICES_DATA, CATEGORIES, SAMPLE_APPLICATIONS } from "../data/services";
 import { useLanguage } from "../components/LanguageProvider";
 import { Navbar } from "../components/layout/Navbar";

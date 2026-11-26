@@ -150,6 +150,20 @@ async function runSchemaMigration(): Promise<void> {
       phone: "+243 89 500 3003",
       email: "h.kasongo@direction.gouv.cd",
     },
+    {
+      officer_id: "OFF-ADM-004",
+      full_name: "Administrateur Général RDC",
+      username: "superAdmin@gov",
+      password: "AdminRDC@2026",
+      service_id: "all",
+      service_title: "Tous les Services Publics (Supervision Générale)",
+      ministry: "Présidence & Administration Numérique Centrale",
+      role: "super_admin",
+      role_label_fr: "Super Administrateur",
+      role_label_en: "Super Admin",
+      phone: "+243 80 000 0001",
+      email: "superAdmin@gov",
+    },
   ];
 
   for (const off of threeTierOfficers) {

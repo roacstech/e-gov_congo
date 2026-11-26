@@ -2,7 +2,6 @@
 
 import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   ApplicationStatus,
   OfficerApplicationRecord,
@@ -21,17 +20,19 @@ import { getLocalizedServiceTitle } from "@/data/services";
 import {
   AlertCircle,
   ArrowLeft,
+  ArrowRight,
   Award,
   Check,
   CheckCircle2,
   ChevronDown,
   Eye,
+  EyeOff,
   FileText,
   IdCard,
-  KeyRound,
   Loader2,
   Lock,
   LogOut,
+  Mail,
   RefreshCw,
   Search,
   ShieldCheck,
@@ -60,45 +61,55 @@ interface DashboardStats {
 
 const ROLE_ACCOUNTS: {
   tier: OfficerRoleTier;
-  username: string;
+  emailLogin: string;
   password: string;
   titleFr: string;
   titleEn: string;
-  shortDescFr: string;
-  shortDescEn: string;
+  badgeFr: string;
+  badgeEn: string;
 }[] = [
   {
     tier: "verification_officer",
-    username: "officer.verifier",
-    password: "Verify@Rdc2026",
+    emailLogin: "verification@gov.in",
+    password: "verifier@2026",
     titleFr: "Officier de Vérification",
     titleEn: "Verification Officer",
-    shortDescFr: "Vérifie document & ID proof puis signe.",
-    shortDescEn: "Verifies document & ID proof, then signs.",
+    badgeFr: "Niveau 1",
+    badgeEn: "Tier 1",
   },
   {
     tier: "approver_officer",
-    username: "officer.approver",
-    password: "Approve@Rdc2026",
+    emailLogin: "approver@gov.in",
+    password: "approver@2026",
     titleFr: "Officier d'Approbation",
     titleEn: "Approver Officer",
-    shortDescFr: "Contrôle, signe et approuve (2 signatures).",
-    shortDescEn: "Checks, signs & approves (both signatures).",
+    badgeFr: "Niveau 2",
+    badgeEn: "Tier 2",
   },
   {
     tier: "head_of_service",
-    username: "officer.head",
-    password: "Head@Rdc2026",
+    emailLogin: "head@gov.in",
+    password: "head@2026",
     titleFr: "Chef de Service",
     titleEn: "Head of Service",
-    shortDescFr: "Valide les 2 signatures et délivre le dossier.",
-    shortDescEn: "Reviews dual signatures and issues document.",
+    badgeFr: "Niveau 3",
+    badgeEn: "Tier 3",
+  },
+  {
+    tier: "super_admin",
+    emailLogin: "superadmin@gov.in",
+    password: "superadmin@2026",
+    titleFr: "Super Administrateur",
+    titleEn: "Super Admin",
+    badgeFr: "Admin",
+    badgeEn: "Admin",
   },
 ];
 
 function getDefaultQueueForTier(tier: OfficerRoleTier): QueueFilter {
   if (tier === "verification_officer") return "pending_verification";
   if (tier === "approver_officer") return "pending_approval";
+  if (tier === "super_admin") return "all";
   return "pending_head";
 }
 
@@ -114,13 +125,16 @@ function OfficerPortalContent() {
   // Top bar profile menu & verifier active dossier
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
+  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
+  const roleMenuRef = useRef<HTMLDivElement | null>(null);
   const [refreshSignal, setRefreshSignal] = useState(0);
   const [openedVerifierApp, setOpenedVerifierApp] =
     useState<OfficerApplicationRecord | null>(null);
 
   // Login form
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("verification@gov.in");
+  const [password, setPassword] = useState("verifier@2026");
+  const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loggingIn, setLoggingIn] = useState(false);
 
@@ -160,6 +174,9 @@ function OfficerPortalContent() {
     const onOutside = (e: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
         setProfileOpen(false);
+      }
+      if (roleMenuRef.current && !roleMenuRef.current.contains(e.target as Node)) {
+        setRoleMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", onOutside);
@@ -563,179 +580,186 @@ function OfficerPortalContent() {
           </div>
         ) : !officer ? (
           /* ================================================================ */
-          /* CLEAN FLAT OFFICER LOGIN                                         */
+          /* CLEAN CENTERED OFFICER SIGN IN                                   */
           /* ================================================================ */
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 space-y-6">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-900"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>{isFr ? "Accueil" : "Back"}</span>
-            </Link>
+          <div
+            className="relative min-h-[calc(100vh-145px)] flex flex-col items-center justify-center px-4 py-12 bg-cover bg-center overflow-hidden"
+            style={{ backgroundImage: "url('/hero-bg.jpg')" }}
+          >
+            {/* Bright frosted atmospheric overlay so the scenic background stays soft and card text stays crisp */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/82 via-sky-50/76 to-white/88 backdrop-blur-[2px]"
+            />
 
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-              {/* Role Cards */}
-              <div className="md:col-span-7 bg-white border border-gray-300 p-6 space-y-4">
-                <div>
-                  <h1 className="text-lg font-bold text-gray-900">
-                    {isFr ? "Portail Agent Public" : "Officer Portal"}
-                  </h1>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {isFr
-                      ? "Choisissez un rôle ou connectez-vous."
-                      : "Select an officer role or sign in with credentials."}
-                  </p>
-                </div>
+            {/* Top-Right Role Selector Dropdown */}
+            <div ref={roleMenuRef} className="absolute top-4 right-4 sm:top-6 sm:right-8 z-20">
+              <button
+                type="button"
+                onClick={() => setRoleMenuOpen((v) => !v)}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/95 hover:bg-white border border-slate-200/90 shadow-sm text-xs font-semibold text-slate-800 cursor-pointer transition-all backdrop-blur-sm"
+              >
+                <User className="w-3.5 h-3.5 text-blue-600" />
+                <span>
+                  {ROLE_ACCOUNTS.find(
+                    (r) => r.emailLogin.toLowerCase() === username.trim().toLowerCase()
+                  )?.[isFr ? "titleFr" : "titleEn"] ||
+                    (isFr ? "Choisir un rôle" : "Select Role")}
+                </span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-slate-500 transition-transform ${
+                    roleMenuOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
 
-                <div className="space-y-2.5">
-                  {ROLE_ACCOUNTS.map((role) => (
-                    <div
-                      key={role.tier}
-                      className="border border-gray-300 p-3.5 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="space-y-1 min-w-0">
-                        <div className="text-xs font-bold text-gray-900">
-                          {isFr ? role.titleFr : role.titleEn}
-                        </div>
-                        <p className="text-xs text-gray-600">
-                          {isFr ? role.shortDescFr : role.shortDescEn}
-                        </p>
-                      </div>
-
-                      <button
-                        type="button"
-                        disabled={loggingIn}
-                        onClick={() => {
-                          setUsername(role.username);
-                          setPassword(role.password);
-                          performLogin(role.username, role.password);
-                        }}
-                        className="px-3.5 py-2 bg-gray-600 hover:bg-gray-700 disabled:opacity-60 text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer shrink-0"
-                      >
-                        <KeyRound className="w-3.5 h-3.5" />
-                        <span>{isFr ? "Connexion" : "Sign In"}</span>
-                      </button>
-                    </div>
-                  ))}
-
-                  {/* Super Admin Credential Card */}
-                  <div
-                    key="super_admin"
-                    className="border border-gray-300 p-3.5 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="space-y-1 min-w-0">
-                      <div className="text-xs font-bold text-gray-900">
-                        {isFr ? "Super Administrateur" : "Super Administrator"}
-                      </div>
-                      <p className="text-xs text-gray-600">
-                        {isFr
-                          ? "Gestion centralisée des services, comptes agents & administration."
-                          : "Central management of services, officer accounts & system."}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      disabled={loggingIn}
-                      onClick={() => {
-                        setUsername("superadmin");
-                        setPassword("AdminRDC@2026");
-                        performLogin("superadmin", "AdminRDC@2026");
-                      }}
-                      className="px-3.5 py-2 bg-gray-600 hover:bg-gray-700 disabled:opacity-60 text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer shrink-0"
-                    >
-                      <KeyRound className="w-3.5 h-3.5" />
-                      <span>{isFr ? "Connexion" : "Sign In"}</span>
-                    </button>
+              {roleMenuOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-slate-200 shadow-xl py-1.5 z-30">
+                  <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                    {isFr ? "Rôles Officiels (4)" : "Official Roles (4)"}
                   </div>
-                </div>
-
-                <div className="pt-2 border-t border-gray-200 text-[11px] text-gray-500">
-                  {isFr ? "Agents de service :" : "Service agents:"}{" "}
-                  {directory
-                    .filter((d) => d.serviceId !== "all")
-                    .map((d) => (
+                  {ROLE_ACCOUNTS.map((role) => {
+                    const selected =
+                      username.trim().toLowerCase() === role.emailLogin.toLowerCase();
+                    return (
                       <button
-                        key={d.officerId}
+                        key={role.tier}
                         type="button"
-                        onClick={() => setUsername(d.username)}
-                        className="text-gray-700 hover:underline mr-2 cursor-pointer font-mono"
+                        onClick={() => {
+                          setUsername(role.emailLogin);
+                          setPassword(role.password);
+                          setLoginError(null);
+                          setRoleMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-2.5 flex items-center justify-between gap-2 transition-colors cursor-pointer ${
+                          selected
+                            ? "bg-blue-50/80 text-blue-900"
+                            : "hover:bg-slate-50 text-slate-800"
+                        }`}
                       >
-                        {d.username}
+                        <div className="min-w-0">
+                          <div className="text-xs font-semibold truncate">
+                            {isFr ? role.titleFr : role.titleEn}
+                          </div>
+                          <div className="font-mono text-[10px] text-slate-500 truncate">
+                            {role.emailLogin}
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 shrink-0">
+                          {isFr ? role.badgeFr : role.badgeEn}
+                        </span>
                       </button>
-                    ))}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUsername("superadmin");
-                      setPassword("AdminRDC@2026");
-                    }}
-                    className="text-blue-700 hover:underline mr-2 cursor-pointer font-mono font-bold"
-                  >
-                    superadmin
-                  </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="relative z-10 w-full max-w-[420px] space-y-6">
+              {/* Official DRC Crest Header */}
+              <div className="flex items-center justify-center gap-3.5">
+                <div className="w-14 h-14 rounded-full bg-[#1d72db] border-2 border-white shadow-md flex items-center justify-center p-1 shrink-0 ring-1 ring-blue-900/15">
+                  <img
+                    src="/logo.png"
+                    alt="République Démocratique du Congo"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div className="text-left leading-snug">
+                  <div className="text-[15px] sm:text-base font-bold text-slate-900 tracking-tight">
+                    République Démocratique du Congo
+                  </div>
+                  <div className="text-xs font-semibold text-[#0c3b7a] tracking-wide">
+                    {isFr ? "Administration Publique Numérique" : "Digital Public Administration"}
+                  </div>
                 </div>
               </div>
 
-              {/* Manual Form */}
-              <div className="md:col-span-5 bg-white border border-gray-300 p-6 space-y-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 bg-gray-100 border border-gray-300 text-gray-700 flex items-center justify-center shrink-0">
-                    <Lock className="w-4 h-4" />
-                  </div>
-                  <h2 className="text-sm font-bold text-gray-900">
-                    {isFr ? "Connexion Manuelle" : "Officer Sign In"}
-                  </h2>
-                </div>
+              {/* Clean Centered Login Card */}
+              <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/90 shadow-[0_20px_50px_-15px_rgba(15,23,42,0.14)] p-7 sm:p-8 space-y-5">
+                <h1 className="text-xl font-bold text-slate-900 text-center tracking-tight">
+                  {isFr ? "Connexion Agent" : "Sign in"}
+                </h1>
 
                 {loginError && (
-                  <div className="p-2.5 bg-rose-50 border border-rose-300 text-xs text-rose-700 flex items-center gap-2">
+                  <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span>{loginError}</span>
                   </div>
                 )}
 
-                <form onSubmit={handleLoginSubmit} className="space-y-3">
-                  <div>
-                    <label className="text-xs font-medium text-gray-700 block mb-1">
-                      {isFr ? "Identifiant" : "Username"}
+                <form onSubmit={handleLoginSubmit} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-slate-700 block">
+                      {isFr ? "Adresse E-mail" : "Email Address"}
                     </label>
-                    <input
-                      type="text"
-                      required
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder="officer.verifier"
-                      className="w-full px-3 py-2 text-xs border border-gray-300 bg-white focus:border-gray-500 font-mono"
-                    />
+                    <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                      <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                      <input
+                        type="text"
+                        required
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="verification@gov.in"
+                        className="w-full text-xs sm:text-sm text-slate-900 bg-transparent focus:outline-none font-mono"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-700 block mb-1">
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-slate-700 block">
                       {isFr ? "Mot de passe" : "Password"}
                     </label>
-                    <input
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full px-3 py-2 text-xs border border-gray-300 bg-white focus:border-gray-500"
-                    />
+                    <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                      <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full text-xs sm:text-sm text-slate-900 bg-transparent focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="text-slate-400 hover:text-slate-600 cursor-pointer shrink-0"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
+
                   <button
                     type="submit"
                     disabled={loggingIn}
-                    className="w-full py-2.5 bg-gray-600 hover:bg-gray-700 disabled:opacity-60 text-white text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-2.5 rounded-xl bg-[#258cfb] hover:bg-[#1a76e0] disabled:opacity-60 text-white text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
                   >
                     {loggingIn ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <ShieldCheck className="w-4 h-4" />
+                      <>
+                        <span>{isFr ? "Se connecter" : "Sign In"}</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
                     )}
-                    <span>{isFr ? "Se connecter" : "Sign In"}</span>
                   </button>
                 </form>
+              </div>
+
+              {/* Clean Subtle Footer Note */}
+              <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-600 font-medium">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>
+                  {isFr
+                    ? "Portail Souverain RDC • Contrôle d'Accès par Rôle"
+                    : "DRC Sovereign Portal • Role-Based Access Control"}
+                </span>
               </div>
             </div>
           </div>

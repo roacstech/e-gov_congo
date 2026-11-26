@@ -13,6 +13,9 @@ const SESSION_SECRET =
 
 export function normalizeOfficerTier(rawRole: string | null | undefined): OfficerRoleTier {
   const role = (rawRole || "").trim().toLowerCase();
+  if (role === "super_admin" || role === "superadmin" || role === "admin") {
+    return "super_admin";
+  }
   if (
     role === "head_of_service" ||
     role === "head_officer" ||
@@ -48,6 +51,11 @@ export function getRoleLabels(tier: OfficerRoleTier): { fr: string; en: string }
       return {
         fr: "3. Chef de Service",
         en: "3. Head of Service Officer",
+      };
+    case "super_admin":
+      return {
+        fr: "4. Super Administrateur",
+        en: "4. Super Admin",
       };
   }
 }

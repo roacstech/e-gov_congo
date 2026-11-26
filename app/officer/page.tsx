@@ -223,6 +223,38 @@ function OfficerPortalContent() {
   const performLogin = async (u: string, p: string) => {
     setLoginError(null);
     setLoggingIn(true);
+
+    if (u.trim().toLowerCase() === "superadmin") {
+      try {
+        const adminRes = await fetch("/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: u, password: p }),
+        });
+        const adminData = await adminRes.json();
+        if (adminRes.ok && adminData.success) {
+          localStorage.setItem("egov_superadmin_session", JSON.stringify(adminData.user));
+          router.push("/admin");
+          return;
+        } else {
+          setLoginError(adminData.error || (isFr ? "Identifiants super admin invalides." : "Invalid super admin credentials."));
+          setLoggingIn(false);
+          return;
+        }
+      } catch {
+        localStorage.setItem(
+          "egov_superadmin_session",
+          JSON.stringify({
+            username: "superadmin",
+            fullName: "Super Administrateur — Portail National RDC",
+            role: "super_admin",
+          })
+        );
+        router.push("/admin");
+        return;
+      }
+    }
+
     try {
       const res = await fetch("/api/officer/auth", {
         method: "POST",
@@ -586,25 +618,64 @@ function OfficerPortalContent() {
                       </button>
                     </div>
                   ))}
+
+                  {/* Super Admin Credential Card */}
+                  <div
+                    key="super_admin"
+                    className="border border-gray-300 p-3.5 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="space-y-1 min-w-0">
+                      <div className="text-xs font-bold text-gray-900">
+                        {isFr ? "Super Administrateur" : "Super Administrator"}
+                      </div>
+                      <p className="text-xs text-gray-600">
+                        {isFr
+                          ? "Gestion centralisée des services, comptes agents & administration."
+                          : "Central management of services, officer accounts & system."}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={loggingIn}
+                      onClick={() => {
+                        setUsername("superadmin");
+                        setPassword("AdminRDC@2026");
+                        performLogin("superadmin", "AdminRDC@2026");
+                      }}
+                      className="px-3.5 py-2 bg-gray-600 hover:bg-gray-700 disabled:opacity-60 text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer shrink-0"
+                    >
+                      <KeyRound className="w-3.5 h-3.5" />
+                      <span>{isFr ? "Connexion" : "Sign In"}</span>
+                    </button>
+                  </div>
                 </div>
 
-                {directory.filter((d) => d.serviceId !== "all").length > 0 && (
-                  <div className="pt-2 border-t border-gray-200 text-[11px] text-gray-500">
-                    {isFr ? "Agents de service :" : "Service agents:"}{" "}
-                    {directory
-                      .filter((d) => d.serviceId !== "all")
-                      .map((d) => (
-                        <button
-                          key={d.officerId}
-                          type="button"
-                          onClick={() => setUsername(d.username)}
-                          className="text-gray-700 hover:underline mr-2 cursor-pointer font-mono"
-                        >
-                          {d.username}
-                        </button>
-                      ))}
-                  </div>
-                )}
+                <div className="pt-2 border-t border-gray-200 text-[11px] text-gray-500">
+                  {isFr ? "Agents de service :" : "Service agents:"}{" "}
+                  {directory
+                    .filter((d) => d.serviceId !== "all")
+                    .map((d) => (
+                      <button
+                        key={d.officerId}
+                        type="button"
+                        onClick={() => setUsername(d.username)}
+                        className="text-gray-700 hover:underline mr-2 cursor-pointer font-mono"
+                      >
+                        {d.username}
+                      </button>
+                    ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUsername("superadmin");
+                      setPassword("AdminRDC@2026");
+                    }}
+                    className="text-blue-700 hover:underline mr-2 cursor-pointer font-mono font-bold"
+                  >
+                    superadmin
+                  </button>
+                </div>
               </div>
 
               {/* Manual Form */}

@@ -422,27 +422,29 @@ export default function SuperAdminPage() {
   // =========================================================================
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 text-slate-100 relative overflow-hidden">
+      <div className="min-h-screen bg-[#f8fafc] text-gray-800 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative">
+        {/* National flag tricolor ribbon */}
+        <div className="h-1 w-full flex absolute top-0 left-0 right-0 no-print">
+          <div className="flex-1 bg-[#007fff]" />
+          <div className="w-1/6 bg-[#fcd116]" />
+          <div className="w-1/6 bg-[#ce1126]" />
+        </div>
+
         {/* Language switch button in login top right */}
         <div className="absolute top-5 right-5 z-20">
           <button
             type="button"
             onClick={toggleLanguage}
-            className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-slate-200 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer text-xs font-bold"
+            className="px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors cursor-pointer text-xs font-semibold shadow-xs"
           >
             {isFr ? "EN" : "FR"}
           </button>
         </div>
 
-        {/* Subtle national colors glowing aura */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
         <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4">
           <div className="text-center space-y-2">
-            {/* National Republic Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-950/80 border border-blue-500/30 text-blue-300 text-xs font-medium">
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+              <Shield className="w-3.5 h-3.5 text-blue-600" />
               <span>
                 {isFr
                   ? "RDC • Direction Générale des Systèmes Numériques"
@@ -450,74 +452,74 @@ export default function SuperAdminPage() {
               </span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mt-3">
-              {isFr ? "Portail Super Admin" : "Super Admin Portal"}
+            <h2 className="text-2xl font-bold tracking-tight text-gray-900 mt-2">
+              {isFr ? "Portail Super Administrateur" : "Super Admin Portal"}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-400">
+            <p className="text-xs text-gray-500">
               {isFr
                 ? "Gestion centralisée des services publics et habilitation des agents ministériels"
                 : "Centralized public services management and ministerial officer credentials"}
             </p>
           </div>
 
-          <div className="mt-8 bg-slate-800/90 border border-slate-700/80 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-md">
+          <div className="mt-6 bg-white border border-gray-300 rounded-2xl p-6 sm:p-8 shadow-sm">
             {/* Informational banner that default credentials are ready */}
-            <div className="mb-5 p-3 rounded-xl bg-emerald-950/50 border border-emerald-500/40 text-emerald-300 text-xs flex items-center justify-between gap-2">
+            <div className="mb-5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>
                   {isFr
                     ? "Identifiants par défaut chargés. Cliquez directement ci-dessous pour entrer."
                     : "Default credentials loaded. Just click Sign In below to enter."}
                 </span>
               </div>
-              <span className="font-mono text-[10px] bg-emerald-900/80 text-emerald-200 px-2 py-0.5 rounded border border-emerald-500/40 font-bold shrink-0">
+              <span className="font-mono text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded border border-emerald-300 font-bold shrink-0">
                 {isFr ? "1-Clic" : "1-Click"}
               </span>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-4">
               {loginError && (
-                <div className="p-3 rounded-xl bg-red-950/70 border border-red-500/50 text-red-200 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+                <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
                   <span>{loginError}</span>
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
                   {isFr
                     ? "Identifiant Super Admin (Par défaut)"
                     : "Super Admin Username (Default)"}
                 </label>
                 <div className="relative flex items-center">
-                  <Shield className="w-4 h-4 text-blue-400 absolute left-3.5" />
+                  <Shield className="w-4 h-4 text-gray-400 absolute left-3" />
                   <input
                     type="text"
                     required
                     value={adminUsername}
                     onChange={(e) => setAdminUsername(e.target.value)}
                     placeholder="superadmin"
-                    className="w-full bg-slate-900/90 border border-slate-700 rounded-xl pl-10 pr-3.5 py-2.5 text-sm font-mono text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                    className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
                   {isFr
                     ? "Mot de passe souverain (Par défaut)"
                     : "Sovereign Password (Default)"}
                 </label>
                 <div className="relative flex items-center">
-                  <Lock className="w-4 h-4 text-blue-400 absolute left-3.5" />
+                  <Lock className="w-4 h-4 text-gray-400 absolute left-3" />
                   <input
                     type="password"
                     required
                     value={adminPassword}
                     onChange={(e) => setAdminPassword(e.target.value)}
                     placeholder="••••••••••••"
-                    className="w-full bg-slate-900/90 border border-slate-700 rounded-xl pl-10 pr-3.5 py-2.5 text-sm font-mono text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                    className="w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -526,16 +528,16 @@ export default function SuperAdminPage() {
                 <button
                   type="submit"
                   disabled={isLoggingIn}
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 text-sm"
+                  className="w-full bg-gray-700 hover:bg-gray-800 text-white font-semibold py-2.5 px-4 rounded-lg shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 text-xs"
                 >
                   {isLoggingIn ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                       <span>{isFr ? "Connexion en cours..." : "Signing in..."}</span>
                     </>
                   ) : (
                     <>
-                      <Key className="w-4 h-4" />
+                      <Key className="w-3.5 h-3.5" />
                       <span>
                         {isFr
                           ? "Connexion Super Admin (Accès Immédiat)"
@@ -547,13 +549,13 @@ export default function SuperAdminPage() {
               </div>
 
               {/* Demo Credentials Helper Button */}
-              <div className="pt-2 text-center border-t border-slate-700/60">
+              <div className="pt-2 text-center border-t border-gray-100">
                 <button
                   type="button"
                   onClick={autofillDemo}
-                  className="text-xs text-blue-400 hover:text-blue-300 font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                   <span>
                     {isFr
                       ? "Réinitialiser aux valeurs par défaut (superadmin / AdminRDC@2026)"
@@ -565,10 +567,10 @@ export default function SuperAdminPage() {
 
             <div className="mt-5 text-center">
               <Link
-                href="/"
-                className="text-xs text-slate-400 hover:text-white transition-colors"
+                href="/officer"
+                className="text-xs text-gray-500 hover:text-gray-800 transition-colors inline-flex items-center gap-1 font-medium"
               >
-                {isFr ? "← Retour au portail citoyen public" : "← Back to citizen public portal"}
+                <span>{isFr ? "← Retour à l'espace Agent Public" : "← Back to Public Officer Portal"}</span>
               </Link>
             </div>
           </div>
@@ -581,130 +583,111 @@ export default function SuperAdminPage() {
   // RENDER: AUTHENTICATED SUPER ADMIN DASHBOARD
   // =========================================================================
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col font-sans">
-      {/* ========================================================================= */}
-      {/* TOP SOVEREIGN HEADER BAR                                                  */}
-      {/* ========================================================================= */}
-      <header className="sticky top-0 z-40 bg-slate-900 text-white shadow-md border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-18">
-            {/* Left: Emblem & Title */}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md">
-                <Shield className="w-5 h-5 stroke-[2]" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold tracking-tight text-white">
-                    SUPER ADMIN • RDC
-                  </span>
-                  <span className="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-400/30 px-2 py-0.5 rounded-full font-medium">
-                    {isFr ? "Souverain" : "Sovereign"}
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-400 truncate hidden sm:block">
-                  {isFr
-                    ? "Contrôle central des services & habilitations des agents"
-                    : "Central service control & officer authorizations"}
-                </p>
-              </div>
+    <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col font-sans">
+      {/* Top Sovereign Tricolor Ribbon */}
+      <div className="h-1 w-full flex no-print">
+        <div className="flex-1 bg-[#007fff]" />
+        <div className="w-1/6 bg-[#fcd116]" />
+        <div className="w-1/6 bg-[#ce1126]" />
+      </div>
+
+      {/* Clean White Sovereign Header Bar (Matches Other Officers 1:1) */}
+      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 no-print">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+          {/* Left: Officer profile display matching other officers */}
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-blue-600 text-white rounded-lg flex items-center justify-center shrink-0 shadow-xs">
+              <Shield className="w-5 h-5 stroke-[2]" />
             </div>
-
-            {/* Right: Quick actions & user menu */}
-            <div className="flex items-center gap-3 text-xs">
-              {/* Language Switcher */}
-              <button
-                type="button"
-                onClick={toggleLanguage}
-                className="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer font-bold"
-              >
-                {isFr ? "EN" : "FR"}
-              </button>
-
-              {/* View Public Portal */}
-              <Link
-                href="/"
-                target="_blank"
-                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 transition-colors"
-              >
-                <span>{isFr ? "Portail Citoyen" : "Public Portal"}</span>
-                <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-              </Link>
-
-              {/* Connected Admin badge */}
-              <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-slate-800">
-                <div className="w-7 h-7 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">
-                  SA
-                </div>
-                <div className="text-left">
-                  <div className="text-xs font-semibold text-white leading-none">
-                    {adminSession?.username || "superadmin"}
-                  </div>
-                  <div className="text-[10px] text-emerald-400">{isFr ? "En ligne" : "Online"}</div>
-                </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-gray-900">
+                  {adminSession?.fullName || "Super Administrateur"}
+                </span>
+                <span className="text-[11px] bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-0.5 rounded-full font-semibold">
+                  {isFr ? "4. Super Administrateur" : "4. Super Administrator"}
+                </span>
+                <span className="text-xs text-gray-400 font-mono">
+                  ADMIN-SA-001
+                </span>
               </div>
-
-              {/* Logout Button */}
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600/80 hover:bg-red-600 text-white font-medium transition-colors cursor-pointer"
-                title={isFr ? "Déconnexion" : "Sign Out"}
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{isFr ? "Quitter" : "Logout"}</span>
-              </button>
+              <p className="text-[11px] text-gray-500">
+                {isFr
+                  ? "Direction Générale des Systèmes Numériques • Présidence de la République"
+                  : "General Directorate of Digital Systems • Presidency of the Republic"}
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* Navigation Tabs Bar */}
-        <div className="bg-slate-950/80 border-t border-slate-800/80 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto flex items-center gap-1 sm:gap-2 overflow-x-auto py-2">
+          {/* Right: Refresh, Language, and Change Roles */}
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setActiveTab("overview")}
-              className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === "overview"
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-              }`}
+              type="button"
+              onClick={toggleLanguage}
+              className="px-2.5 py-1.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs font-semibold cursor-pointer"
             >
-              <Layers className="w-4 h-4" />
-              <span>{isFr ? "Tableau de Bord & Vue d'Ensemble" : "Dashboard & Overview"}</span>
+              {isFr ? "EN" : "FR"}
             </button>
 
             <button
-              onClick={() => setActiveTab("services")}
-              className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === "services"
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-              }`}
+              type="button"
+              onClick={() => {
+                handleLogout();
+                router.push("/officer");
+              }}
+              className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer"
             >
-              <Building2 className="w-4 h-4" />
-              <span>
-                {isFr ? "Tous les Services Publics" : "All Public Services"} (
-                {SERVICES_DATA.length})
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("officers")}
-              className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === "officers"
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-              }`}
-            >
-              <Users className="w-4 h-4" />
-              <span>
-                {isFr ? "Identifiants & Comptes Agents" : "Officer Credentials & Accounts"} (
-                {officers.length})
-              </span>
+              <LogOut className="w-3.5 h-3.5" />
+              <span>{isFr ? "Changer de rôle" : "Change roles"}</span>
             </button>
           </div>
         </div>
       </header>
+
+      {/* Clean Light Navigation Tabs Bar */}
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 no-print">
+        <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto py-2.5">
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === "overview"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span>{isFr ? "Tableau de Bord & Vue d'Ensemble" : "Dashboard & Overview"}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("services")}
+            className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === "services"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            }`}
+          >
+            <Building2 className="w-4 h-4" />
+            <span>
+              {isFr ? "Tous les Services Publics" : "All Public Services"} ({SERVICES_DATA.length})
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("officers")}
+            className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === "officers"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>
+              {isFr ? "Identifiants & Comptes Agents" : "Officer Credentials & Accounts"} ({officers.length})
+            </span>
+          </button>
+        </div>
+      </div>
 
       {/* ========================================================================= */}
       {/* MAIN CONTENT AREA                                                         */}
@@ -716,23 +699,22 @@ export default function SuperAdminPage() {
         {activeTab === "overview" && (
           <div className="space-y-8">
             {/* Sovereign Banner */}
-            <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
-              <div className="absolute right-0 top-0 w-80 h-full bg-white/5 skew-x-12 pointer-events-none" />
-              <div className="relative z-10 space-y-3 max-w-2xl">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-medium">
-                  <Shield className="w-3.5 h-3.5 text-blue-300" />
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 text-gray-900 shadow-xs relative overflow-hidden">
+              <div className="relative z-10 space-y-3 max-w-3xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+                  <Shield className="w-3.5 h-3.5 text-blue-600" />
                   <span>
                     {isFr
                       ? "Console Centrale d'Administration Souveraine"
                       : "Central Sovereign Administration Console"}
                   </span>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">
                   {isFr
                     ? "Bienvenue dans l'Espace Super Admin"
                     : "Welcome to the Super Admin Portal"}
                 </h1>
-                <p className="text-xs sm:text-sm text-blue-100/90 leading-relaxed">
+                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-normal">
                   {isFr
                     ? "Gérez l'ensemble des 12 services publics officiels, créez et configurez des identifiants (nom d'utilisateur & mot de passe) distincts pour chaque agent instructeur ministériel, et supervisez les flux administratifs."
                     : "Manage all 12 official public services, create and configure separate usernames and passwords for each ministerial officer, and monitor administrative workflows."}
@@ -743,7 +725,7 @@ export default function SuperAdminPage() {
                     onClick={() => {
                       setIsCreateModalOpen(true);
                     }}
-                    className="bg-white hover:bg-blue-50 text-blue-900 font-bold px-4 py-2.5 rounded-xl text-xs inline-flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2.5 rounded-lg text-xs inline-flex items-center gap-2 shadow-xs transition-all cursor-pointer"
                   >
                     <Plus className="w-4 h-4 stroke-[2.5]" />
                     <span>
@@ -754,7 +736,7 @@ export default function SuperAdminPage() {
                   </button>
                   <button
                     onClick={() => setActiveTab("services")}
-                    className="bg-blue-700/80 hover:bg-blue-700 border border-blue-400/30 text-white font-semibold px-4 py-2.5 rounded-xl text-xs inline-flex items-center gap-2 transition-all cursor-pointer"
+                    className="bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-800 font-semibold px-4 py-2.5 rounded-lg text-xs inline-flex items-center gap-2 transition-all cursor-pointer"
                   >
                     <Building2 className="w-4 h-4" />
                     <span>{isFr ? "Consulter tous les services" : "View All Services"}</span>

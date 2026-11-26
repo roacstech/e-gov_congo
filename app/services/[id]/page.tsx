@@ -3,8 +3,9 @@
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Language, CitizenApplication } from "../../../types";
+import { CitizenApplication } from "../../../types";
 import { SERVICES_DATA } from "../../../data/services";
+import { useLanguage } from "../../../components/LanguageProvider";
 import { Navbar } from "../../../components/layout/Navbar";
 import { Footer } from "../../../components/layout/Footer";
 import {
@@ -28,7 +29,7 @@ function ServiceDetailContent() {
   const serviceId = params?.id as string;
   const router = useRouter();
 
-  const [language, setLanguage] = useState<Language>("fr");
+  const { language, setLanguage } = useLanguage();
   const isFr = language === "fr";
 
   const service =

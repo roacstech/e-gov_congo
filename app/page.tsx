@@ -3,15 +3,15 @@
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Language, ServiceCategory, ServiceItem, CitizenApplication } from "../types";
+import { ServiceCategory, ServiceItem, CitizenApplication } from "../types";
 import { SERVICES_DATA, CATEGORIES, SAMPLE_APPLICATIONS } from "../data/services";
+import { useLanguage } from "../components/LanguageProvider";
 import { Navbar } from "../components/layout/Navbar";
 import { Footer } from "../components/layout/Footer";
 import { ServiceCard } from "../components/services/ServiceCard";
 import { ServiceDetailModal } from "../components/services/ServiceDetailModal";
 import { ApplicationModal } from "../components/services/ApplicationModal";
 import { TrackingSection } from "../components/tracking/TrackingSection";
-import { VerificationSection } from "../components/verification/VerificationSection";
 import { FaqSection } from "../components/faq/FaqSection";
 import { OfficerPortalModal } from "../components/officer/OfficerPortalModal";
 import {
@@ -29,10 +29,10 @@ import {
 
 export default function Home() {
   const router = useRouter();
-  const [language, setLanguage] = useState<Language>("fr");
+  const { language, setLanguage } = useLanguage();
   const isFr = language === "fr";
 
-  const [activeTab, setActiveTab] = useState<"services" | "track" | "verify" | "faq">("services");
+  const [activeTab, setActiveTab] = useState<"services" | "track" | "faq">("services");
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -58,7 +58,11 @@ export default function Home() {
       return;
     }
     const tabParam = params.get("tab");
-    if (tabParam === "track" || tabParam === "verify" || tabParam === "faq" || tabParam === "services") {
+    if (tabParam === "verify") {
+      router.replace("/verify");
+      return;
+    }
+    if (tabParam === "track" || tabParam === "faq" || tabParam === "services") {
       const timer = window.setTimeout(() => {
         setActiveTab(tabParam);
         if (tabParam !== "services") {
@@ -179,6 +183,10 @@ export default function Home() {
         onLanguageChange={setLanguage}
         activeTab={activeTab}
         onTabChange={(tab) => {
+          if (tab === "verify") {
+            router.push("/verify");
+            return;
+          }
           setActiveTab(tab);
           if (tab !== "services") {
             window.setTimeout(() => {
@@ -646,10 +654,7 @@ export default function Home() {
             />
           )}
 
-          {/* TAB 3: DOCUMENT VERIFICATION */}
-          {activeTab === "verify" && <VerificationSection language={language} />}
-
-          {/* TAB 4: HELP & FAQ */}
+          {/* TAB 3: HELP & FAQ */}
           {activeTab === "faq" && <FaqSection language={language} />}
         </section>
       </main>

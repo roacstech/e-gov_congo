@@ -182,6 +182,18 @@ export async function downloadOfficialCardOrDocumentPng(
     (isFullApp(application) &&
       application.tableName === "residence_applications");
 
+  const isNationalityCertificate =
+    application.serviceId === "certificat-nationalite" ||
+    application.serviceId === "nationality-certificate" ||
+    (isFullApp(application) &&
+      application.tableName === "nationality_applications");
+
+  const isWorkPermit =
+    application.serviceId === "permis-travail-etranger" ||
+    application.serviceId === "work-permit" ||
+    (isFullApp(application) &&
+      application.tableName === "work_permit_applications");
+
   const localizedTitle = getLocalizedServiceTitle(
     application.serviceId,
     application.serviceTitle,
@@ -1600,6 +1612,10 @@ export async function downloadOfficialCardOrDocumentPng(
       ? "Driving-License"
       : isResidenceCertificate
       ? "Residence-Certificate"
+      : isNationalityCertificate
+      ? "Nationality-Certificate"
+      : isWorkPermit
+      ? "Work-Permit"
       : "Official-Document"
   }-${issuedNumber}.png`;
   document.body.appendChild(a);

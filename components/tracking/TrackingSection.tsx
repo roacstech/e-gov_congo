@@ -375,6 +375,7 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
               activeResult.status === "ready") && (
               <div className="pt-4 border-t border-slate-200">
                 <SignedDocumentAndIdProofViewer
+                  key={activeResult.trackingId}
                   application={activeResult}
                   language={language}
                   defaultMode="both"

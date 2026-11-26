@@ -3,8 +3,9 @@
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Language, ServiceCategory, ServiceItem, CitizenApplication } from "../../types";
+import { ServiceCategory, ServiceItem, CitizenApplication } from "../../types";
 import { SERVICES_DATA, CATEGORIES, SAMPLE_APPLICATIONS } from "../../data/services";
+import { useLanguage } from "../../components/LanguageProvider";
 import { Navbar } from "../../components/layout/Navbar";
 import { Footer } from "../../components/layout/Footer";
 import { ServiceCard } from "../../components/services/ServiceCard";
@@ -33,7 +34,7 @@ type SortOption = "default" | "fastest" | "title";
 
 export default function ServicesPage() {
   const router = useRouter();
-  const [language, setLanguage] = useState<Language>("fr");
+  const { language, setLanguage } = useLanguage();
   const isFr = language === "fr";
 
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory>("all");
@@ -175,6 +176,8 @@ export default function ServicesPage() {
         onTabChange={(tab) => {
           if (tab === "services") {
             window.scrollTo({ top: 0, behavior: "smooth" });
+          } else if (tab === "verify") {
+            router.push("/verify");
           } else {
             router.push(`/?tab=${tab}`);
           }
@@ -739,7 +742,7 @@ export default function ServicesPage() {
                 </Link>
 
                 <Link
-                  href="/?tab=verify"
+                  href="/verify"
                   className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-blue-700/80 hover:bg-blue-600 text-white border border-white/20 transition-colors shadow-xs inline-flex items-center gap-2"
                 >
                   <QrCode className="w-4 h-4 text-emerald-400" />

@@ -7,6 +7,7 @@ import { Language, CitizenApplication } from "../../../types";
 import { SERVICES_DATA } from "../../../data/services";
 import { Navbar } from "../../../components/layout/Navbar";
 import { Footer } from "../../../components/layout/Footer";
+import { useLanguage } from "@/components/LanguageProvider";
 import { AnimatedCheckmark } from "@/components/AnimatedCheckmark";
 import { readSupportingFile, UploadedFilePayload } from "@/lib/file-upload";
 import {
@@ -293,7 +294,7 @@ function DropdownCalendarPicker({
 
 export default function NationalIdServicePage() {
   const router = useRouter();
-  const [language, setLanguage] = useState<Language>("fr");
+  const { language, setLanguage } = useLanguage();
   const isFr = language === "fr";
 
   // Flow step: 1 = Fill Form, 2 = Upload Docs & Photo, 3 = Review & Submit

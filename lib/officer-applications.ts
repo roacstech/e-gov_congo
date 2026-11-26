@@ -855,6 +855,73 @@ export async function findApplicationByTrackingOrDocNumber(
   return null;
 }
 
+export interface DocumentVerificationLookupResult {
+  applications: OfficerApplicationRecord[];
+  isTrackingCode: boolean;
+  trackingStatus: ApplicationStatus | null;
+}
+
+/**
+ * Public document verification lookup — searches ONLY officially approved/issued
+ * documents (status 'approved' or 'ready' with an issued document number), never
+ * treating application tracking codes as verified documents.
+ */
+export async function lookupApprovedDocuments(options: {
+  docNumber: string;
+  serviceId?: string;
+}): Promise<DocumentVerificationLookupResult> {
+  const allApps = await fetchAllOfficerApplications({
+    serviceId: options.serviceId,
+  });
+
+  const approvedApps = allApps.filter((app) => {
+    const docNum = (app.issuedNumber || app.workflow?.issuedDocumentNumber || "").trim();
+    return (app.status === "approved" || app.status === "ready") && Boolean(docNum);
+  });
+
+  const rawQuery = (options.docNumber || "").trim();
+  const cleanUpper = rawQuery.replace(/\s+/g, "").toUpperCase();
+  if (!cleanUpper || cleanUpper.length < 5) {
+    return {
+      applications: [],
+      isTrackingCode: false,
+      trackingStatus: null,
+    };
+  }
+
+  const norm = (v?: string | null) => (v || "").trim().replace(/\s+/g, "").toUpperCase();
+
+  // 1. Exact document number match (plus any approved services linked to that NIN)
+  const exactDocMatches = approvedApps.filter((app) => {
+    const docNum = norm(app.issuedNumber || app.workflow?.issuedDocumentNumber);
+    const idNin = norm(app.details?.["ID / NIN"]);
+    return docNum === cleanUpper || (cleanUpper.startsWith("NIN-") && idNin === cleanUpper);
+  });
+  if (exactDocMatches.length > 0) {
+    return {
+      applications: exactDocMatches,
+      isTrackingCode: false,
+      trackingStatus: null,
+    };
+  }
+
+  // 2. Reject tracking codes explicitly ("this is not tracking")
+  const trackingMatch = allApps.find((app) => norm(app.trackingId) === cleanUpper);
+  if (trackingMatch || /^CD-\d{4}-/i.test(cleanUpper)) {
+    return {
+      applications: [],
+      isTrackingCode: true,
+      trackingStatus: trackingMatch?.status || null,
+    };
+  }
+
+  return {
+    applications: [],
+    isTrackingCode: false,
+    trackingStatus: null,
+  };
+}
+
 export async function fetchAuditLogs(trackingId?: string): Promise<OfficerAuditEntry[]> {
   await ensureOfficerSchema();
   let res;

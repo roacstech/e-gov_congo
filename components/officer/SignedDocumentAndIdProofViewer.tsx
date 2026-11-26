@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import {
   ApplicationWorkflowData,
   CitizenApplication,
@@ -129,7 +129,10 @@ const DrcOfficialSeal: React.FC<{
   isApproved: boolean;
   size?: number;
 }> = ({ docNumber, approvedDate, isApproved, size = 92 }) => {
+  const uid = useId().replace(/:/g, "");
   if (!isApproved) return null;
+  const topArcId = `sealTopArc-${uid}`;
+  const bottomArcId = `sealBottomArc-${uid}`;
   return (
     <div
       aria-label="Official Republic Seal"
@@ -143,12 +146,12 @@ const DrcOfficialSeal: React.FC<{
       >
         <defs>
           <path
-            id="sealTopArc"
+            id={topArcId}
             d="M 18,60 A 42,42 0 1,1 102,60"
             fill="none"
           />
           <path
-            id="sealBottomArc"
+            id={bottomArcId}
             d="M 104,64 A 44,44 0 1,1 16,64"
             fill="none"
           />
@@ -184,7 +187,7 @@ const DrcOfficialSeal: React.FC<{
           fontWeight="700"
           letterSpacing="1.3"
         >
-          <textPath href="#sealTopArc" startOffset="50%" textAnchor="middle">
+          <textPath href={`#${topArcId}`} startOffset="50%" textAnchor="middle">
             RÉPUBLIQUE DÉMOCRATIQUE DU CONGO
           </textPath>
         </text>
@@ -194,7 +197,7 @@ const DrcOfficialSeal: React.FC<{
           fontWeight="700"
           letterSpacing="1.2"
         >
-          <textPath href="#sealBottomArc" startOffset="50%" textAnchor="middle">
+          <textPath href={`#${bottomArcId}`} startOffset="50%" textAnchor="middle">
             ★ SCEAU OFFICIEL ★ APPROUVÉ
           </textPath>
         </text>
@@ -432,7 +435,13 @@ export const SignedDocumentAndIdProofViewer: React.FC<
   const [viewMode, setViewMode] = useState<
     "both" | "document" | "id_proof" | "cover"
   >(defaultMode);
+  const [prevTrackingId, setPrevTrackingId] = useState(application.trackingId);
   const [downloading, setDownloading] = useState(false);
+
+  if (prevTrackingId !== application.trackingId) {
+    setPrevTrackingId(application.trackingId);
+    setViewMode(defaultMode);
+  }
 
   const isNationalId =
     application.serviceId === "cni-biometrique" ||

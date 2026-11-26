@@ -33,19 +33,6 @@ import {
   Mail,
 } from "lucide-react";
 
-interface RecentTrackingItem {
-  trackingId: string;
-  serviceId: string;
-  serviceCode: string;
-  serviceTitle: string;
-  applicantName: string;
-  status: string;
-  submittedAt: string;
-  city: string;
-  collectionPoint: string;
-  issuedNumber?: string | null;
-}
-
 function TrackApplicationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -56,34 +43,11 @@ function TrackApplicationContent() {
   const [query, setQuery] = useState("");
   const [activeApplication, setActiveApplication] = useState<OfficerApplicationRecord | null>(null);
   const [auditLogs, setAuditLogs] = useState<OfficerAuditEntry[]>([]);
-  const [recentItems, setRecentItems] = useState<RecentTrackingItem[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copiedTrackingId, setCopiedTrackingId] = useState(false);
-
-  // Fetch recent applications on mount for quick-select chips
-  useEffect(() => {
-    let isMounted = true;
-    async function loadRecent() {
-      try {
-        const res = await fetch("/api/track?recent=1");
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted && data.recent && Array.isArray(data.recent)) {
-            setRecentItems(data.recent);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to fetch recent tracking items:", err);
-      }
-    }
-    loadRecent();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   // Check URL query param on mount (e.g. /track?id=CD-2026-EMP-119844)
   useEffect(() => {
@@ -91,13 +55,8 @@ function TrackApplicationContent() {
     if (paramId && paramId.trim()) {
       setQuery(paramId.trim());
       executeLookup(paramId.trim());
-    } else if (recentItems.length > 0 && !activeApplication && !hasSearched) {
-      // Auto-load first recent item for immediate preview
-      const defaultId = recentItems[0].trackingId;
-      setQuery(defaultId);
-      executeLookup(defaultId);
     }
-  }, [searchParams, recentItems]);
+  }, [searchParams]);
 
   const executeLookup = async (idToSearch: string) => {
     const clean = idToSearch.trim();
@@ -149,12 +108,6 @@ function TrackApplicationContent() {
       router.push(`/track?id=${encodeURIComponent(query.trim())}`);
       executeLookup(query.trim());
     }
-  };
-
-  const handleSelectRecent = (refId: string) => {
-    setQuery(refId);
-    router.push(`/track?id=${encodeURIComponent(refId)}`);
-    executeLookup(refId);
   };
 
   const copyToClipboard = (text: string) => {
@@ -316,35 +269,6 @@ function TrackApplicationContent() {
                   )}
                 </button>
               </div>
-
-              {/* QUICK ACCESS CHIPS FROM REAL DATABASE */}
-              {recentItems.length > 0 && (
-                <div className="pt-3 text-left">
-                  <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium mb-1.5">
-                    <Clock className="w-3.5 h-3.5 text-blue-600" />
-                    <span>{isFr ? "Exemples de dossiers enregistrés en direct :" : "Live applications in database:"}</span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {recentItems.slice(0, 5).map((item) => (
-                      <button
-                        key={item.trackingId}
-                        type="button"
-                        onClick={() => handleSelectRecent(item.trackingId)}
-                        className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all cursor-pointer inline-flex items-center gap-1.5 font-mono ${
-                          activeApplication?.trackingId === item.trackingId
-                            ? "bg-blue-600 text-white border-blue-600 font-bold shadow-xs"
-                            : "bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-blue-50/50"
-                        }`}
-                      >
-                        <span>{item.trackingId}</span>
-                        <span className="text-[10px] text-slate-400 font-sans font-normal truncate max-w-[120px]">
-                          ({item.applicantName.split(" ")[0]})
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </form>
           </div>
         </section>
@@ -795,26 +719,6 @@ function TrackApplicationContent() {
                       : "Please check that your reference code matches your official filing receipt (e.g. CD-2026-EMP-119844) or submit a new application.")}
                 </p>
               </div>
-
-              {recentItems.length > 0 && (
-                <div className="pt-3 border-t border-slate-100 text-left">
-                  <span className="text-xs font-semibold text-slate-700 block mb-2">
-                    {isFr ? "Vous pouvez consulter l'un de ces dossiers actifs :" : "You can try one of these active dossiers:"}
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {recentItems.slice(0, 4).map((rec) => (
-                      <button
-                        key={rec.trackingId}
-                        type="button"
-                        onClick={() => handleSelectRecent(rec.trackingId)}
-                        className="text-xs font-mono text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-                      >
-                        {rec.trackingId} ({rec.serviceCode})
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               <div className="pt-2">
                 <Link

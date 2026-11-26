@@ -31,49 +31,26 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
   onNewApplicationClick,
 }) => {
   const isFr = language === "fr";
-  const [query, setQuery] = useState(initialTrackingId);
+  const [query, setQuery] = useState(initialTrackingId || "");
   const [activeResult, setActiveResult] = useState<CitizenApplication | null>(() => {
-    if (initialTrackingId) {
+    if (initialTrackingId && initialTrackingId.trim()) {
       return (
         applications.find(
           (a) => a.trackingId.toLowerCase() === initialTrackingId.trim().toLowerCase()
         ) || null
       );
     }
-    return applications[0] || null;
+    return null;
   });
 
-  const [hasSearched, setHasSearched] = useState(false);
+  const [hasSearched, setHasSearched] = useState(Boolean(initialTrackingId && initialTrackingId.trim()));
   const [isSearching, setIsSearching] = useState(false);
-  const [realExamples, setRealExamples] = useState<{ trackingId: string; applicantName: string }[]>([]);
 
   useEffect(() => {
-    let isMounted = true;
-    async function loadRealData() {
-      try {
-        const res = await fetch("/api/track?recent=1");
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted && data.recent && Array.isArray(data.recent) && data.recent.length > 0) {
-            setRealExamples(data.recent);
-            // If user did not specify initialTrackingId, auto-select first real application
-            if (!initialTrackingId) {
-              setQuery(data.recent[0].trackingId);
-              runSearch(data.recent[0].trackingId);
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Error loading real tracking examples:", err);
-      }
+    if (initialTrackingId && initialTrackingId.trim()) {
+      setQuery(initialTrackingId.trim());
+      runSearch(initialTrackingId.trim());
     }
-    loadRealData();
-    if (initialTrackingId) {
-      runSearch(initialTrackingId);
-    }
-    return () => {
-      isMounted = false;
-    };
   }, [initialTrackingId]);
 
   const runSearch = async (searchText: string) => {
@@ -164,24 +141,6 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
               {isSearching && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>{isFr ? "Rechercher" : "Track"}</span>
             </button>
-          </div>
-
-          {/* Quick preset chips */}
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-[11px] text-slate-500">
-            <span>{isFr ? "Exemples en direct :" : "Live examples:"}</span>
-            {(realExamples.length > 0 ? realExamples : applications).slice(0, 4).map((app) => (
-              <button
-                key={app.trackingId}
-                type="button"
-                onClick={() => {
-                  setQuery(app.trackingId);
-                  runSearch(app.trackingId);
-                }}
-                className="font-mono text-blue-600 hover:underline cursor-pointer bg-blue-50/60 px-2 py-0.5 rounded border border-blue-100"
-              >
-                {app.trackingId}
-              </button>
-            ))}
           </div>
         </form>
       </div>

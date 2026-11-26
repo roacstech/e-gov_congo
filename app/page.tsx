@@ -88,7 +88,7 @@ export default function Home() {
 
   // Applications live state (persisting new applications during user session)
   const [applications, setApplications] = useState<CitizenApplication[]>(SAMPLE_APPLICATIONS);
-  const [activeTrackingId, setActiveTrackingId] = useState<string>("CD-2026-849201");
+  const [activeTrackingId, setActiveTrackingId] = useState<string>("");
 
   // 3 Featured Services for Home Page matching requested reference UI
   const featuredServices = useMemo(

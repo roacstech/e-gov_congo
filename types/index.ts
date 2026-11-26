@@ -201,3 +201,27 @@ export interface VerifiedDocument {
   status: "valid" | "expired" | "revoked";
   qrCodeUrl: string;
 }
+
+export interface ServiceOfficer {
+  id?: number;
+  officerId: string;
+  fullName: string;
+  username: string;
+  password?: string;
+  serviceId: string;
+  serviceTitle: string;
+  ministry: string;
+  role: "service_officer" | "senior_officer" | "registrar" | "legal_officer" | "super_admin";
+  isActive: boolean;
+  phone?: string;
+  email?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SuperAdminSession {
+  username: string;
+  role: "super_admin";
+  fullName: string;
+  loginTime: string;
+}

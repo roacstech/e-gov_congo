@@ -20,6 +20,7 @@ import {
   Award,
   Briefcase,
   Sparkles,
+  Shield,
 } from "lucide-react";
 
 interface NavbarProps {
@@ -499,6 +500,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               <UserCog className="w-3.5 h-3.5" />
               <span className="hidden xl:inline">{isFr ? "Agent" : "Officer"}</span>
             </button>
+
+            {/* Super Admin Dashboard direct button */}
+            <Link
+              href="/admin"
+              className="text-amber-300 hover:text-white bg-slate-900/60 hover:bg-slate-900 border border-amber-400/30 px-2.5 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 transition-all shadow-xs ml-1"
+              title={isFr ? "Console Super Admin" : "Super Admin Console"}
+            >
+              <Shield className="w-3.5 h-3.5 text-amber-300" />
+              <span className="hidden xl:inline">Super Admin</span>
+            </Link>
           </nav>
 
           {/* ============================================================== */}
@@ -586,7 +597,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           </div>
 
-          <div className="pt-1 flex items-center justify-between text-xs">
+          <div className="pt-2 border-t border-blue-400/30 flex items-center justify-between text-xs">
             <button
               onClick={() => {
                 router.push("/officer");
@@ -598,7 +609,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>{isFr ? "Espace Agent Public" : "Public Officer Portal"}</span>
             </button>
 
-            <span className="text-white/60">© RDC 2026</span>
+            <Link
+              href="/admin"
+              onClick={() => setMobileMenuOpen(false)}
+              className="inline-flex items-center gap-1 text-amber-300 font-bold hover:underline"
+            >
+              <Shield className="w-3.5 h-3.5 text-amber-300" />
+              <span>Super Admin</span>
+            </Link>
           </div>
         </div>
       )}

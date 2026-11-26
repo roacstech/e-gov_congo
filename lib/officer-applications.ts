@@ -443,21 +443,52 @@ function normalizeApplicationRow(
       : null,
     "Address": address,
     "Province / Origin": row.origin_province
-      ? [row.origin_province, row.origin_territory, row.origin_sector].filter(Boolean).join(" • ")
+      ? [row.origin_province, row.origin_territory || row.origin_city, row.origin_sector].filter(Boolean).join(" • ")
       : row.province
       ? [row.province, row.commune, row.quarter].filter(Boolean).join(" • ")
       : null,
+    "Birth Time": row.birth_time ? String(row.birth_time) : null,
     "Father Name & ID": row.father_full_name
       ? `${row.father_full_name}${row.father_id_number ? ` (${row.father_id_number})` : ""}`
       : null,
+    "Father Details":
+      cfg.tableName === "birth_applications" &&
+      (row.father_nationality || row.father_occupation)
+        ? [row.father_nationality, row.father_occupation].filter(Boolean).join(" • ")
+        : null,
     "Mother Name & ID": row.mother_full_name
       ? `${row.mother_full_name}${row.mother_id_number ? ` (${row.mother_id_number})` : ""}`
       : null,
+    "Mother Details":
+      cfg.tableName === "birth_applications" &&
+      (row.mother_nationality || row.mother_occupation)
+        ? [row.mother_nationality, row.mother_occupation].filter(Boolean).join(" • ")
+        : null,
     "Groom": row.groom_full_name
       ? `${row.groom_full_name}${row.groom_id_number ? ` (${row.groom_id_number})` : ""}`
       : null,
+    "Groom Birth": row.groom_birth_date || row.groom_birth_place
+      ? [row.groom_birth_date, row.groom_birth_place].filter(Boolean).join(" • ")
+      : null,
+    "Groom Details": row.groom_nationality || row.groom_occupation
+      ? [row.groom_nationality, row.groom_occupation].filter(Boolean).join(" • ")
+      : null,
+    "Groom Residence": row.groom_residence ? String(row.groom_residence) : null,
+    "Groom Parents": row.groom_father_name || row.groom_mother_name
+      ? [row.groom_father_name, row.groom_mother_name].filter(Boolean).join(" & ")
+      : null,
     "Bride": row.bride_full_name
       ? `${row.bride_full_name}${row.bride_id_number ? ` (${row.bride_id_number})` : ""}`
+      : null,
+    "Bride Birth": row.bride_birth_date || row.bride_birth_place
+      ? [row.bride_birth_date, row.bride_birth_place].filter(Boolean).join(" • ")
+      : null,
+    "Bride Details": row.bride_nationality || row.bride_occupation
+      ? [row.bride_nationality, row.bride_occupation].filter(Boolean).join(" • ")
+      : null,
+    "Bride Residence": row.bride_residence ? String(row.bride_residence) : null,
+    "Bride Parents": row.bride_father_name || row.bride_mother_name
+      ? [row.bride_father_name, row.bride_mother_name].filter(Boolean).join(" & ")
       : null,
     "Marriage Date & Regime": row.marriage_date
       ? `${row.marriage_date}${row.matrimonial_regime ? ` • ${row.matrimonial_regime}` : ""}`
@@ -465,6 +496,10 @@ function normalizeApplicationRow(
     "Death Date & Place": row.death_date
       ? `${row.death_date}${row.death_place ? ` • ${row.death_place}` : ""}`
       : null,
+    "Death Time": row.death_time ? String(row.death_time) : null,
+    "Death Location Type": row.death_location_type ? String(row.death_location_type) : null,
+    "Medical Notice": row.medical_notice_number ? String(row.medical_notice_number) : null,
+    "Deceased ID": row.deceased_id_number ? String(row.deceased_id_number) : null,
     "Hospital / Doctor": row.birth_hospital
       ? String(row.birth_hospital)
       : row.hospital_name
@@ -475,6 +510,8 @@ function normalizeApplicationRow(
       : row.declarant_role
       ? String(row.declarant_role)
       : null,
+    "Declarant ID": row.declarant_id_number ? String(row.declarant_id_number) : null,
+    "Declarant Residence": row.declarant_residence ? String(row.declarant_residence) : null,
     "ID / NIN": row.id_number ? String(row.id_number) : null,
     "License Category": row.license_category
       ? `${row.license_category}${row.blood_group ? ` • Blood: ${row.blood_group}` : ""}`
@@ -491,6 +528,12 @@ function normalizeApplicationRow(
     "Quarter Chief / Utility": row.quarter_chief_name || row.utility_meter_ref
       ? [row.quarter_chief_name, row.utility_meter_ref].filter(Boolean).join(" • ")
       : null,
+    "Avenue / Parcel": row.avenue_parcel ? String(row.avenue_parcel) : null,
+    "Occupancy & Duration": row.occupancy_status || row.residence_duration
+      ? [row.occupancy_status, row.residence_duration].filter(Boolean).join(" • ")
+      : null,
+    "Landlord / Host": row.landlord_host_name ? String(row.landlord_host_name) : null,
+    "Purpose": row.purpose ? String(row.purpose) : null,
     "Collection Hub": collectionPoint,
   };
 
@@ -810,6 +853,73 @@ export async function findApplicationByTrackingOrDocNumber(
   }
 
   return null;
+}
+
+export interface DocumentVerificationLookupResult {
+  applications: OfficerApplicationRecord[];
+  isTrackingCode: boolean;
+  trackingStatus: ApplicationStatus | null;
+}
+
+/**
+ * Public document verification lookup — searches ONLY officially approved/issued
+ * documents (status 'approved' or 'ready' with an issued document number), never
+ * treating application tracking codes as verified documents.
+ */
+export async function lookupApprovedDocuments(options: {
+  docNumber: string;
+  serviceId?: string;
+}): Promise<DocumentVerificationLookupResult> {
+  const allApps = await fetchAllOfficerApplications({
+    serviceId: options.serviceId,
+  });
+
+  const approvedApps = allApps.filter((app) => {
+    const docNum = (app.issuedNumber || app.workflow?.issuedDocumentNumber || "").trim();
+    return (app.status === "approved" || app.status === "ready") && Boolean(docNum);
+  });
+
+  const rawQuery = (options.docNumber || "").trim();
+  const cleanUpper = rawQuery.replace(/\s+/g, "").toUpperCase();
+  if (!cleanUpper || cleanUpper.length < 5) {
+    return {
+      applications: [],
+      isTrackingCode: false,
+      trackingStatus: null,
+    };
+  }
+
+  const norm = (v?: string | null) => (v || "").trim().replace(/\s+/g, "").toUpperCase();
+
+  // 1. Exact document number match (plus any approved services linked to that NIN)
+  const exactDocMatches = approvedApps.filter((app) => {
+    const docNum = norm(app.issuedNumber || app.workflow?.issuedDocumentNumber);
+    const idNin = norm(app.details?.["ID / NIN"]);
+    return docNum === cleanUpper || (cleanUpper.startsWith("NIN-") && idNin === cleanUpper);
+  });
+  if (exactDocMatches.length > 0) {
+    return {
+      applications: exactDocMatches,
+      isTrackingCode: false,
+      trackingStatus: null,
+    };
+  }
+
+  // 2. Reject tracking codes explicitly ("this is not tracking")
+  const trackingMatch = allApps.find((app) => norm(app.trackingId) === cleanUpper);
+  if (trackingMatch || /^CD-\d{4}-/i.test(cleanUpper)) {
+    return {
+      applications: [],
+      isTrackingCode: true,
+      trackingStatus: trackingMatch?.status || null,
+    };
+  }
+
+  return {
+    applications: [],
+    isTrackingCode: false,
+    trackingStatus: null,
+  };
 }
 
 export async function fetchAuditLogs(trackingId?: string): Promise<OfficerAuditEntry[]> {

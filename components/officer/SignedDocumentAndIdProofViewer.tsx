@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import {
   ApplicationWorkflowData,
   CitizenApplication,
@@ -129,7 +129,10 @@ const DrcOfficialSeal: React.FC<{
   isApproved: boolean;
   size?: number;
 }> = ({ docNumber, approvedDate, isApproved, size = 92 }) => {
+  const uid = useId().replace(/:/g, "");
   if (!isApproved) return null;
+  const topArcId = `sealTopArc-${uid}`;
+  const bottomArcId = `sealBottomArc-${uid}`;
   return (
     <div
       aria-label="Official Republic Seal"
@@ -143,12 +146,12 @@ const DrcOfficialSeal: React.FC<{
       >
         <defs>
           <path
-            id="sealTopArc"
+            id={topArcId}
             d="M 18,60 A 42,42 0 1,1 102,60"
             fill="none"
           />
           <path
-            id="sealBottomArc"
+            id={bottomArcId}
             d="M 104,64 A 44,44 0 1,1 16,64"
             fill="none"
           />
@@ -184,7 +187,7 @@ const DrcOfficialSeal: React.FC<{
           fontWeight="700"
           letterSpacing="1.3"
         >
-          <textPath href="#sealTopArc" startOffset="50%" textAnchor="middle">
+          <textPath href={`#${topArcId}`} startOffset="50%" textAnchor="middle">
             RÉPUBLIQUE DÉMOCRATIQUE DU CONGO
           </textPath>
         </text>
@@ -194,7 +197,7 @@ const DrcOfficialSeal: React.FC<{
           fontWeight="700"
           letterSpacing="1.2"
         >
-          <textPath href="#sealBottomArc" startOffset="50%" textAnchor="middle">
+          <textPath href={`#${bottomArcId}`} startOffset="50%" textAnchor="middle">
             ★ SCEAU OFFICIEL ★ APPROUVÉ
           </textPath>
         </text>
@@ -370,7 +373,10 @@ const DETAIL_LABEL_MAP: Record<string, { fr: string; en: string }> = {
   "Hospital / Doctor": { fr: "Hôpital / Médecin", en: "Hospital / Doctor" },
   Declarant: { fr: "Déclarant", en: "Declarant" },
   "Father Name & ID": { fr: "Nom du Père & N° ID", en: "Father Name & ID" },
+  "Father Details": { fr: "Nationalité & Profession (Père)", en: "Father Nationality & Occupation" },
   "Mother Name & ID": { fr: "Nom de la Mère & N° ID", en: "Mother Name & ID" },
+  "Mother Details": { fr: "Nationalité & Profession (Mère)", en: "Mother Nationality & Occupation" },
+  "Birth Time": { fr: "Heure de Naissance", en: "Birth Time" },
   "Quarter Chief / Utility": { fr: "Chef de Quartier / Compteur", en: "Quarter Chief / Utility" },
   Address: { fr: "Adresse", en: "Address" },
   "Province / Origin": { fr: "Province / Origine", en: "Province / Origin" },
@@ -429,7 +435,13 @@ export const SignedDocumentAndIdProofViewer: React.FC<
   const [viewMode, setViewMode] = useState<
     "both" | "document" | "id_proof" | "cover"
   >(defaultMode);
+  const [prevTrackingId, setPrevTrackingId] = useState(application.trackingId);
   const [downloading, setDownloading] = useState(false);
+
+  if (prevTrackingId !== application.trackingId) {
+    setPrevTrackingId(application.trackingId);
+    setViewMode(defaultMode);
+  }
 
   const isNationalId =
     application.serviceId === "cni-biometrique" ||
@@ -442,6 +454,36 @@ export const SignedDocumentAndIdProofViewer: React.FC<
     application.serviceId === "passport" ||
     (isFullRecord(application) &&
       application.tableName === "passport_applications");
+
+  const isBirthCertificate =
+    application.serviceId === "acte-naissance" ||
+    application.serviceId === "birth-certificate" ||
+    (isFullRecord(application) &&
+      application.tableName === "birth_applications");
+
+  const isMarriageCertificate =
+    application.serviceId === "acte-mariage" ||
+    application.serviceId === "marriage-certificate" ||
+    (isFullRecord(application) &&
+      application.tableName === "marriage_applications");
+
+  const isDeathCertificate =
+    application.serviceId === "acte-deces" ||
+    application.serviceId === "death-certificate" ||
+    (isFullRecord(application) &&
+      application.tableName === "death_applications");
+
+  const isDrivingLicense =
+    application.serviceId === "permis-conduire" ||
+    application.serviceId === "driving-license" ||
+    (isFullRecord(application) &&
+      application.tableName === "driving_license_applications");
+
+  const isResidenceCertificate =
+    application.serviceId === "certificat-residence" ||
+    application.serviceId === "residence-certificate" ||
+    (isFullRecord(application) &&
+      application.tableName === "residence_applications");
 
   const localizedServiceTitle = getLocalizedServiceTitle(
     application.serviceId,
@@ -1448,11 +1490,334 @@ export const SignedDocumentAndIdProofViewer: React.FC<
     </div>
   );
 
+  /* ---------------------------------------------------------------------- */
+  /* DRIVING LICENSE: 2-SIDED POLYCARBONATE PVC SMART CARD (CNPR / ISO)     */
+  /* ---------------------------------------------------------------------- */
+  const rawLicenseCombo = String(detailsMap["License Category"] || "B");
+  const [dlCategoryPart, dlBloodRaw] = rawLicenseCombo.split(" • Blood: ");
+  const dlCategory = (dlCategoryPart || "B").trim().toUpperCase();
+  const dlBloodGroup = (dlBloodRaw || "O+").trim();
+  const dlAuthority = application.collectionPoint || application.city;
+
+  const renderFrontDrivingCard = () => (
+    <div className="print-clean-page print-id-card w-full max-w-[388px] aspect-[1.586/1] rounded-xl relative bg-linear-to-br from-[#fdf2f8] via-[#fffdf7] to-[#e0f2fe]/75 border border-rose-300/80 shadow-[0_10px_24px_-6px_rgba(15,23,42,0.25),0_2px_6px_rgba(15,23,42,0.08)] ring-1 ring-inset ring-white/90 overflow-hidden flex flex-col justify-between p-3.5">
+      <PvcSecuritySubstrate />
+
+      <img
+        src="/logo.png"
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none select-none absolute left-[58%] top-[54%] -translate-x-1/2 -translate-y-1/2 w-28 h-28 object-contain opacity-[0.085]"
+      />
+
+      {/* Top Bilingual Driving Licence Header */}
+      <div className="relative z-10 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <img
+            src="/logo.png"
+            alt="Emblème RDC"
+            className="w-8 h-8 object-contain shrink-0"
+          />
+          <div className="min-w-0 leading-tight">
+            <div className="text-[8px] font-extrabold uppercase tracking-[0.12em] text-[#881337] truncate">
+              République Démocratique du Congo
+            </div>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <div className="w-6 h-[2.5px] flex shrink-0">
+                <span className="flex-1 bg-[#007fff]" />
+                <span className="w-2 bg-[#fcd116]" />
+                <span className="w-1.5 bg-[#ce1126]" />
+              </div>
+              <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-slate-900 truncate">
+                {isFr
+                  ? "Permis de Conduire"
+                  : "Driving Licence"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-2 py-0.5 rounded-sm bg-[#881337] text-white font-mono text-[10px] font-extrabold tracking-wider shrink-0">
+          {dlCategory}
+        </div>
+      </div>
+
+      {/* Photo, EMV Chip + Numbered ISO Driver Data Fields */}
+      <div className="relative z-10 flex gap-3 items-start my-auto pt-1">
+        <div className="flex flex-col items-start gap-1 shrink-0">
+          <div className="w-[72px] h-[90px] rounded-md overflow-hidden border border-rose-900/30 shadow-2xs relative bg-slate-100">
+            {photoUrl ? (
+              <img
+                src={photoUrl}
+                alt={application.applicantName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <PassportSilhouettePortrait />
+            )}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-2 -bottom-2 w-6 h-6 rounded-full bg-linear-to-tr from-rose-300/70 via-amber-200/70 to-sky-300/60 border border-white/70 opacity-80"
+            />
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <svg width="24" height="17" viewBox="0 0 38 28" aria-hidden="true">
+              <rect
+                x="1"
+                y="1"
+                width="36"
+                height="26"
+                rx="4"
+                fill="url(#goldPvcChip)"
+                stroke="#854d0e"
+                strokeWidth="0.9"
+              />
+              <line x1="13" y1="1" x2="13" y2="27" stroke="#854d0e" strokeWidth="0.85" />
+              <line x1="25" y1="1" x2="25" y2="27" stroke="#854d0e" strokeWidth="0.85" />
+              <rect
+                x="13"
+                y="8"
+                width="12"
+                height="12"
+                rx="2"
+                fill="none"
+                stroke="#854d0e"
+                strokeWidth="0.85"
+              />
+            </svg>
+            <span className="font-mono text-[7px] font-extrabold text-[#881337] bg-rose-100/80 px-1 py-0.5 rounded-2xs">
+              {dlBloodGroup}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex-1 min-w-0 space-y-1 leading-tight">
+          <div>
+            <div className="text-[6px] font-bold uppercase tracking-wider text-rose-900/70">
+              5. {isFr ? "N° du Permis" : "Licence Number"}
+            </div>
+            <div className="font-mono text-[11px] font-extrabold text-[#0c3b7a] tracking-wide">
+              {issuedNumber || idProofSummary.primaryIdNumber}
+            </div>
+          </div>
+
+          <div>
+            <div className="text-[6px] font-bold uppercase tracking-wider text-rose-900/70">
+              1-3. {isFr ? "Nom & Prénoms" : "Surname & Given Names"}
+            </div>
+            <div className="text-[10.5px] font-extrabold uppercase text-slate-900 truncate">
+              {idProofSummary.holderName}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-1.5">
+            <div className="min-w-0">
+              <div className="text-[6px] font-bold uppercase tracking-wider text-rose-900/70">
+                3. {isFr ? "Naissance" : "Birth"}
+              </div>
+              <div className="text-[8.5px] font-bold uppercase text-slate-800 truncate">
+                {[idProofSummary.birthDate, idProofSummary.birthPlace || application.city]
+                  .filter(Boolean)
+                  .join(" • ")}
+              </div>
+            </div>
+            <div className="min-w-0">
+              <div className="text-[6px] font-bold uppercase tracking-wider text-rose-900/70">
+                4d. NIN / ID
+              </div>
+              <div className="font-mono text-[8px] font-bold uppercase text-slate-800 truncate">
+                {detailsMap["ID / NIN"] || "—"}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-1.5">
+            <div className="min-w-0">
+              <div className="text-[6px] font-bold uppercase tracking-wider text-rose-900/70">
+                4a. {isFr ? "Délivré" : "Issued"}
+              </div>
+              <div className="text-[8px] font-semibold uppercase text-slate-800 truncate">
+                {sealDate}
+              </div>
+            </div>
+            <div className="min-w-0">
+              <div className="text-[6px] font-bold uppercase tracking-wider text-rose-900/70">
+                4b. {isFr ? "Validité" : "Expires"}
+              </div>
+              <div className="text-[8px] font-bold uppercase text-slate-900">
+                {passportExpiryDate}
+              </div>
+            </div>
+          </div>
+
+          <div className="min-w-0">
+            <div className="text-[6px] font-bold uppercase tracking-wider text-rose-900/70">
+              8. {isFr ? "Adresse" : "Address"} &bull; 9. {isFr ? "Cat." : "Cat."} {dlCategory}
+            </div>
+            <div className="text-[7.5px] font-semibold uppercase text-slate-700 truncate">
+              {detailsMap["Address"] || idProofSummary.address || application.city}
+            </div>
+          </div>
+        </div>
+
+        <div className="pointer-events-none select-none absolute right-0.5 bottom-0 w-7 h-9 overflow-hidden opacity-20 grayscale contrast-125">
+          {photoUrl ? (
+            <img
+              src={photoUrl}
+              alt=""
+              aria-hidden="true"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <PassportSilhouettePortrait />
+          )}
+        </div>
+      </div>
+
+      <div className="relative z-10 flex items-center justify-between text-[6.8px] font-bold uppercase tracking-[0.12em] text-[#881337]/80">
+        <span>CNPR &bull; Min. Transports R.D.C.</span>
+        <span className="font-mono text-slate-700">
+          {issuedNumber || idProofSummary.primaryIdNumber}
+        </span>
+      </div>
+    </div>
+  );
+
+  const dlCategoriesMatrix = [
+    { code: "A", labelFr: "Moto", labelEn: "Moto" },
+    { code: "B", labelFr: "Auto ≤3.5t", labelEn: "Car ≤3.5t" },
+    { code: "C", labelFr: "Poids lourd", labelEn: "Truck" },
+    { code: "D", labelFr: "Transport", labelEn: "Bus" },
+    { code: "E", labelFr: "Remorque", labelEn: "Trailer" },
+  ];
+
+  const renderBackDrivingCard = () => (
+    <div className="print-clean-page print-id-card w-full max-w-[388px] aspect-[1.586/1] rounded-xl relative bg-linear-to-br from-[#fffafb] via-[#f8fafc] to-[#f1f5f9] border border-rose-300/80 shadow-[0_10px_24px_-6px_rgba(15,23,42,0.25),0_2px_6px_rgba(15,23,42,0.08)] ring-1 ring-inset ring-white/90 overflow-hidden flex flex-col justify-between">
+      <PvcSecuritySubstrate />
+
+      <div className="relative z-10">
+        {/* Matte Black Magnetic Stripe */}
+        <div className="mt-2.5 h-5 w-full bg-linear-to-b from-[#1f2937] via-[#030712] to-[#111827] shadow-inner" />
+
+        {/* ISO Category Matrix Table + QR Matrix */}
+        <div className="px-3 pt-1.5 flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <table className="w-full border-collapse text-[6.8px] bg-white/95 border border-slate-300">
+              <thead>
+                <tr className="bg-rose-50 text-[#881337] font-bold uppercase border-b border-slate-300">
+                  <th className="px-1.5 py-0.5 text-left">9. Cat</th>
+                  <th className="px-1.5 py-0.5 text-left">
+                    {isFr ? "Véhicule" : "Class"}
+                  </th>
+                  <th className="px-1.5 py-0.5 text-left">10. {isFr ? "Émis" : "From"}</th>
+                  <th className="px-1.5 py-0.5 text-left">11. {isFr ? "Exp." : "Until"}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 font-mono">
+                {dlCategoriesMatrix.map((row) => {
+                  const active = dlCategory.includes(row.code);
+                  return (
+                    <tr
+                      key={row.code}
+                      className={active ? "bg-emerald-50/70 font-bold text-slate-900" : "text-slate-400"}
+                    >
+                      <td className="px-1.5 py-0.5 font-sans font-extrabold">{row.code}</td>
+                      <td className="px-1.5 py-0.5 font-sans">
+                        {isFr ? row.labelFr : row.labelEn}
+                      </td>
+                      <td className="px-1.5 py-0.5">{active ? sealDate : "—"}</td>
+                      <td className="px-1.5 py-0.5">{active ? passportExpiryDate : "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="border border-slate-300 bg-white p-0.5 shrink-0 shadow-2xs flex flex-col items-center gap-0.5">
+            <RealisticQrMatrix
+              seed={`DL|${issuedNumber || application.applicantName}|${dlCategory}`}
+              size={44}
+            />
+            <span className="font-mono text-[6px] font-bold text-[#881337]">
+              {dlBloodGroup} &bull; {dlCategory}
+            </span>
+          </div>
+        </div>
+
+        {/* Dual Signatures & Seal Strip */}
+        <div className="mx-3 mt-1.5 px-2 py-1 bg-[#fffef7]/95 border border-slate-300/80 relative">
+          <div className="grid grid-cols-2 gap-2 items-end">
+            <div className="min-w-0">
+              <div className="h-5 flex items-center justify-start overflow-hidden">
+                {wf.verificationSignature ? (
+                  <img
+                    src={wf.verificationSignature}
+                    alt="Verification Signature"
+                    className="max-h-5 object-contain mix-blend-multiply"
+                  />
+                ) : (
+                  <span className="text-[6.5px] text-slate-400 italic">
+                    {isFr ? "Non signé" : "Unsigned"}
+                  </span>
+                )}
+              </div>
+              <div className="border-t border-slate-300 pt-0.5 text-[6px] font-semibold text-slate-700 truncate">
+                {isFr ? "Vérif." : "Verifier"}: {wf.verificationOfficerName || "—"}
+              </div>
+            </div>
+
+            <div className="min-w-0">
+              <div className="h-5 flex items-center justify-start overflow-hidden">
+                {wf.approverSignature ? (
+                  <img
+                    src={wf.approverSignature}
+                    alt="Approver Signature"
+                    className="max-h-5 object-contain mix-blend-multiply"
+                  />
+                ) : (
+                  <span className="text-[6.5px] text-slate-400 italic">
+                    {isFr ? "En attente" : "Pending"}
+                  </span>
+                )}
+              </div>
+              <div className="border-t border-slate-300 pt-0.5 text-[6px] font-semibold text-slate-700 truncate">
+                {isFr ? "Approb." : "Approver"}: {wf.approverOfficerName || "—"}
+              </div>
+            </div>
+          </div>
+
+          {bothSigned && (
+            <div className="pointer-events-none absolute -right-1 -top-5">
+              <DrcOfficialSeal
+                docNumber={issuedNumber || application.trackingId}
+                approvedDate={sealDate}
+                isApproved={bothSigned}
+                size={52}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Back Authority & Barcode Footer */}
+      <div className="relative z-10 px-3 pb-1.5 pt-0.5 flex items-center justify-between gap-2 text-[6.5px] text-slate-700">
+        <span className="truncate font-semibold uppercase">
+          4c. {dlAuthority}
+        </span>
+        <span className="font-mono font-bold text-[#881337] shrink-0">
+          {issuedNumber || idProofSummary.primaryIdNumber}
+        </span>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-4">
       {/* Control bar */}
       <div className="flex flex-wrap items-center justify-between gap-2 no-print">
-        {isNationalId ? (
+        {isNationalId || isDrivingLicense ? (
           <div className="inline-flex bg-gray-100 p-0.5 text-xs border border-gray-300">
             <button
               type="button"
@@ -1574,24 +1939,1147 @@ export const SignedDocumentAndIdProofViewer: React.FC<
         </div>
       </div>
 
-      {/* NATIONAL ID SERVICE -> ONLY 2-SIDED POLYCARBONATE PVC SMART CARD */}
+      {/* NATIONAL ID & DRIVING LICENSE -> 2-SIDED POLYCARBONATE PVC SMART CARDS */}
       {isNationalId ? (
-        <div className="flex flex-wrap gap-5 items-start">
+        <div className="flex flex-wrap gap-5 items-start justify-center">
           {(viewMode === "both" || viewMode === "document") && renderFrontIdCard()}
           {(viewMode === "both" || viewMode === "id_proof") && renderBackIdCard()}
         </div>
+      ) : isDrivingLicense ? (
+        <div className="flex flex-wrap gap-5 items-start justify-center">
+          {(viewMode === "both" || viewMode === "document") &&
+            renderFrontDrivingCard()}
+          {(viewMode === "both" || viewMode === "id_proof") &&
+            renderBackDrivingCard()}
+        </div>
       ) : isPassport ? (
         /* PASSPORT SERVICE -> REALISTIC BILINGUAL DRC BIOMETRIC PASSPORT */
-        <div className="flex flex-wrap gap-5 items-start">
+        <div className="flex flex-wrap gap-5 items-start justify-center">
           {(viewMode === "both" || viewMode === "document") &&
             renderPassportBioDataPage()}
           {(viewMode === "both" || viewMode === "id_proof") &&
             renderPassportEndorsementPage()}
           {viewMode === "cover" && renderPassportCover()}
         </div>
+      ) : isBirthCertificate ? (
+        /* BIRTH CERTIFICATE -> DISTINCT DRC CIVIL REGISTRY BIRTH EXTRACT (FOREST EMERALD & PARCHMENT LEDGER) */
+        (() => {
+          const birthTimeStr = detailsMap["Birth Time"]
+            ? ` • ${detailsMap["Birth Time"]}`
+            : "";
+          const childBirthDateStr =
+            (idProofSummary.birthDate || detailsMap["Birth Date"] || "—") +
+            birthTimeStr;
+          const childBirthPlaceStr =
+            idProofSummary.birthPlace || detailsMap["Birth Place"] || application.city;
+          const hospitalStr = detailsMap["Hospital / Doctor"] || "—";
+          const rawDeclarant = String(detailsMap["Declarant"] || "Père");
+          const declarantDisplay =
+            !isFr && /^p[èe]re$/i.test(rawDeclarant)
+              ? "Father"
+              : !isFr && /^m[èe]re$/i.test(rawDeclarant)
+              ? "Mother"
+              : rawDeclarant;
+          const childGenderDisplay = getLocalizedDetailValue(
+            "Gender",
+            String(detailsMap["Gender"] || "M"),
+            isFr
+          );
+
+          return (
+            <div className="print-clean-page mx-auto relative bg-[#fcfaf2] border-2 border-[#064e3b] overflow-hidden flex flex-col justify-between w-full max-w-3xl">
+              <img
+                src="/logo.png"
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none select-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 object-contain opacity-[0.045]"
+              />
+
+              <div className="relative z-10 m-1.5 border border-[#064e3b]/35 bg-[#fcfaf2]/80">
+                {/* Top Civil Registry Emblem & Dual-Column Authority Header */}
+                <div className="bg-[#064e3b] text-white px-5 py-3 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <img
+                      src="/logo.png"
+                      alt="Emblème RDC"
+                      className="w-10 h-10 object-contain shrink-0 bg-white/95 rounded-full p-0.5"
+                    />
+                    <div className="min-w-0 leading-tight">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#fcd116] truncate">
+                        République Démocratique du Congo
+                      </div>
+                      <div className="text-xs font-extrabold uppercase tracking-wider text-white truncate">
+                        {isFr
+                          ? "État Civil • Registre des Naissances"
+                          : "Civil Registry • Register of Births"}
+                      </div>
+                      <div className="text-[10px] text-emerald-100/90 truncate">
+                        {application.collectionPoint || application.city}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0 border-l border-emerald-700/80 pl-3">
+                    <div className="text-[9px] uppercase tracking-wider text-emerald-200">
+                      {isFr ? "Acte N° / Register" : "Birth Act No."}
+                    </div>
+                    <div className="font-mono text-sm font-extrabold text-[#fcd116]">
+                      {issuedNumber || "—"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Main Civil Registry Document Body */}
+                <div className="p-5 sm:p-6 space-y-4">
+                  <div className="text-center pb-3 border-b border-emerald-900/20">
+                    <h4 className="font-serif text-lg font-extrabold uppercase tracking-wide text-[#064e3b]">
+                      {isFr
+                        ? "EXTRAIT D'ACTE DE NAISSANCE"
+                        : "OFFICIAL BIRTH CERTIFICATE EXTRACT"}
+                    </h4>
+                    <p className="text-[11px] font-serif italic text-gray-600 mt-1">
+                      {isFr
+                        ? "L'Officier de l'État Civil soussigné certifie que l'acte ci-dessous figure au Registre Officiel des Naissances."
+                        : "The undersigned Civil Registrar certifies that the following birth record is duly inscribed in the Official Civil Register."}
+                    </p>
+                  </div>
+
+                  {/* SECTION I: REGISTERED CHILD */}
+                  <div className="border border-emerald-900/25 bg-white/95">
+                    <div className="bg-emerald-50/90 border-b border-emerald-900/20 px-3.5 py-1.5 flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#064e3b]">
+                        {isFr
+                          ? "I. Identité de l'Enfant Déclaré"
+                          : "I. Registered Child Details"}
+                      </span>
+                      <span className="text-[10px] font-semibold text-emerald-800">
+                        {isFr ? "Délivré le : " : "Issued: "} {sealDate}
+                      </span>
+                    </div>
+
+                    <div className="p-3.5 flex items-start gap-4">
+                      {photoUrl && (
+                        <img
+                          src={photoUrl}
+                          alt={application.applicantName}
+                          className="w-16 h-20 object-cover border border-emerald-900/30 shrink-0 bg-white"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2.5 text-xs">
+                        <div className="sm:col-span-2 pb-1.5 border-b border-gray-100">
+                          <span className="text-[10px] uppercase tracking-wide text-gray-500 block">
+                            {isFr
+                              ? "Nom Complet de l'Enfant (Nom • Post-nom • Prénom)"
+                              : "Child Full Name (Surname • Post-Name • First Name)"}
+                          </span>
+                          <span className="font-serif text-base font-bold text-gray-900 uppercase">
+                            {application.applicantName}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] uppercase text-gray-500 block">
+                            {isFr ? "Date & Heure de Naissance" : "Date & Time of Birth"}
+                          </span>
+                          <span className="font-semibold text-gray-900">
+                            {childBirthDateStr}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] uppercase text-gray-500 block">
+                            {isFr ? "Sexe de l'Enfant" : "Sex"}
+                          </span>
+                          <span className="font-semibold text-gray-900">
+                            {childGenderDisplay}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] uppercase text-gray-500 block">
+                            {isFr ? "Commune / Lieu de Naissance" : "Birthplace / City"}
+                          </span>
+                          <span className="font-semibold text-gray-900">
+                            {childBirthPlaceStr}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] uppercase text-gray-500 block">
+                            {isFr ? "Maternité / Centre Hospitalier" : "Hospital / Maternity"}
+                          </span>
+                          <span className="font-semibold text-gray-900">
+                            {hospitalStr}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SECTION II: PARENTS LINEAGE (FATHER & MOTHER CARDS) */}
+                  <div className="border border-emerald-900/25 bg-white/95">
+                    <div className="bg-emerald-50/90 border-b border-emerald-900/20 px-3.5 py-1.5">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#064e3b]">
+                        {isFr ? "II. Filiation Parentale" : "II. Parents' Lineage"}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-gray-200 text-xs">
+                      <div className="p-3.5 space-y-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-900/75 block">
+                          {isFr ? "Père" : "Father"}
+                        </span>
+                        <div className="font-bold text-gray-900">
+                          {detailsMap["Father Name & ID"] || "—"}
+                        </div>
+                        {detailsMap["Father Details"] && (
+                          <div className="text-[11px] text-gray-600">
+                            {detailsMap["Father Details"]}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-3.5 space-y-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-900/75 block">
+                          {isFr ? "Mère" : "Mother"}
+                        </span>
+                        <div className="font-bold text-gray-900">
+                          {detailsMap["Mother Name & ID"] || "—"}
+                        </div>
+                        {detailsMap["Mother Details"] && (
+                          <div className="text-[11px] text-gray-600">
+                            {detailsMap["Mother Details"]}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-gray-200 px-3.5 py-2 bg-gray-50/70 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                      <div>
+                        <span className="text-gray-500 mr-1.5">
+                          {isFr ? "Province d'Origine :" : "Province / Origin:"}
+                        </span>
+                        <span className="font-semibold text-gray-800">
+                          {detailsMap["Province / Origin"] || application.city}
+                        </span>
+                      </div>
+                      <div className="sm:text-right">
+                        <span className="text-gray-500 mr-1.5">
+                          {isFr ? "Déclarant :" : "Declarant:"}
+                        </span>
+                        <span className="font-semibold text-gray-800">
+                          {declarantDisplay}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SECTION III: SIGNATURES, QR CODE & CIVIL REGISTRY SEAL */}
+                  <div className="relative pt-1">
+                    <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+                      <div className="flex-1">{renderDocSignatures()}</div>
+                      <div className="border border-emerald-900/20 bg-white p-2.5 flex flex-col items-center justify-center shrink-0">
+                        <RealisticQrMatrix
+                          seed={`BIRTH|${issuedNumber || application.applicantName}|${childBirthDateStr}`}
+                          size={58}
+                        />
+                        <span className="font-mono text-[8px] font-bold text-[#064e3b] mt-1">
+                          {issuedNumber || "—"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {bothSigned && (
+                      <div className="flex justify-end mt-2 sm:mt-0 sm:absolute sm:right-24 sm:-top-6">
+                        <DrcOfficialSeal
+                          docNumber={issuedNumber || application.trackingId}
+                          approvedDate={sealDate}
+                          isApproved={bothSigned}
+                          size={88}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative z-10 px-5 py-2 bg-[#064e3b] text-white flex items-center justify-between text-[10px]">
+                <span className="font-mono">
+                  {issuedNumber || "—"} &bull; {sealDate}
+                </span>
+                <span className="uppercase tracking-wider font-semibold text-[#fcd116]">
+                  {bothSigned
+                    ? isFr
+                      ? "État Civil Certifié & Scellé"
+                      : "Civil Registry Certified & Sealed"
+                    : isFr
+                    ? "En cours"
+                    : "In progress"}
+                </span>
+              </div>
+            </div>
+          );
+        })()
+      ) : isMarriageCertificate ? (
+        /* MARRIAGE CERTIFICATE -> REGAL BURGUNDY & GOLD CIVIL MARRIAGE ACT (CENTERED) */
+        (() => {
+          const translateNatCombo = (val?: string | null) => {
+            if (!val) return "—";
+            return isFr ? val : val.replace(/\bCongolaise\b/gi, "Congolese");
+          };
+          const marriageCombo = String(detailsMap["Marriage Date & Regime"] || "");
+          const [mDatePart, mRegimePart] = marriageCombo.split(" • ");
+          const localizedRegime =
+            !isFr && /communaut[ée]\s+r[ée]duite\s+aux\s+acqu[êe]ts/i.test(mRegimePart || "")
+              ? "Community of Accrued Gains"
+              : !isFr && /s[ée]paration\s+de\s+biens/i.test(mRegimePart || "")
+              ? "Separation of Property"
+              : mRegimePart || (isFr ? "Communauté réduite aux acquêts" : "Community of Property");
+
+          return (
+            <div className="print-clean-page mx-auto relative bg-[#fefcf7] border-2 border-[#6b102f] overflow-hidden flex flex-col justify-between w-full max-w-3xl">
+              <img
+                src="/logo.png"
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none select-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 object-contain opacity-[0.045]"
+              />
+
+              <div className="relative z-10 m-1.5 border border-[#b45309]/40 bg-[#fefcf7]/85">
+                {/* Regal Burgundy Ceremonial Header */}
+                <div className="bg-[#6b102f] text-white px-5 py-3 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <img
+                      src="/logo.png"
+                      alt="Emblème RDC"
+                      className="w-10 h-10 object-contain shrink-0 bg-white/95 rounded-full p-0.5"
+                    />
+                    <div className="min-w-0 leading-tight">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#fcd116] truncate">
+                        République Démocratique du Congo
+                      </div>
+                      <div className="text-xs font-extrabold uppercase tracking-wider text-white truncate">
+                        {isFr
+                          ? "État Civil • Registre des Mariages"
+                          : "Civil Registry • Marriage Register"}
+                      </div>
+                      <div className="text-[10px] text-rose-100/90 truncate">
+                        {application.collectionPoint || application.city}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0 border-l border-rose-800/80 pl-3">
+                    <div className="text-[9px] uppercase tracking-wider text-rose-200">
+                      {isFr ? "Acte de Mariage N°" : "Marriage Act No."}
+                    </div>
+                    <div className="font-mono text-sm font-extrabold text-[#fcd116]">
+                      {issuedNumber || "—"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5 sm:p-6 space-y-4">
+                  {/* Ceremonial Proclamation Header */}
+                  <div className="text-center pb-3 border-b border-[#6b102f]/20">
+                    <h4 className="font-serif text-lg font-extrabold uppercase tracking-wide text-[#6b102f]">
+                      {isFr
+                        ? "CERTIFICAT D'ENREGISTREMENT DE MARIAGE"
+                        : "OFFICIAL MARRIAGE REGISTRATION CERTIFICATE"}
+                    </h4>
+                    <p className="text-[11px] font-serif italic text-gray-600 mt-1">
+                      {isFr
+                        ? "L'Officier de l'État Civil certifie solennellement la célébration et l'inscription de l'union matrimoniale des époux ci-dessous."
+                        : "The Civil Registrar solemnly certifies the celebration and official inscription of marriage between the spouses identified below."}
+                    </p>
+                  </div>
+
+                  {/* Celebration Date, Matrimonial Regime & Issue Date Bar */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-rose-200/70 border border-[#6b102f]/25 text-xs">
+                    <div className="bg-white px-3.5 py-2">
+                      <span className="text-[10px] uppercase text-gray-500 block">
+                        {isFr ? "Date du Mariage" : "Date of Marriage"}
+                      </span>
+                      <span className="font-bold text-gray-900">
+                        {mDatePart || sealDate}
+                      </span>
+                    </div>
+                    <div className="bg-white px-3.5 py-2">
+                      <span className="text-[10px] uppercase text-gray-500 block">
+                        {isFr ? "Régime Matrimonial" : "Matrimonial Regime"}
+                      </span>
+                      <span className="font-bold text-[#6b102f]">
+                        {localizedRegime}
+                      </span>
+                    </div>
+                    <div className="bg-white px-3.5 py-2">
+                      <span className="text-[10px] uppercase text-gray-500 block">
+                        {isFr ? "Date de Délivrance" : "Issue Date"}
+                      </span>
+                      <span className="font-semibold text-gray-900">
+                        {sealDate}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* SIDE-BY-SIDE TWO-SPOUSE CONTRACTING REGISTER */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* GROOM PANEL */}
+                    <div className="border border-[#6b102f]/25 bg-white/95">
+                      <div className="bg-rose-50/90 border-b border-[#6b102f]/20 px-3.5 py-1.5">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#6b102f]">
+                          {isFr ? "I. L'Époux (Contractant)" : "I. The Groom"}
+                        </span>
+                      </div>
+                      <div className="p-3.5 space-y-2 text-xs">
+                        <div>
+                          <span className="text-[10px] uppercase text-gray-500 block">
+                            {isFr ? "Nom Complet & N° ID" : "Full Name & ID"}
+                          </span>
+                          <span className="font-bold text-gray-900">
+                            {detailsMap["Groom"] || "—"}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 gap-1.5 text-[11px]">
+                          <div>
+                            <span className="text-gray-500 mr-1">
+                              {isFr ? "Naissance :" : "Birth:"}
+                            </span>
+                            <span className="font-semibold text-gray-800">
+                              {detailsMap["Groom Birth"] || "—"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 mr-1">
+                              {isFr ? "Qualité :" : "Details:"}
+                            </span>
+                            <span className="font-semibold text-gray-800">
+                              {translateNatCombo(detailsMap["Groom Details"])}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 mr-1">
+                              {isFr ? "Domicile :" : "Residence:"}
+                            </span>
+                            <span className="text-gray-800">
+                              {detailsMap["Groom Residence"] || detailsMap["Address"] || "—"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 mr-1">
+                              {isFr ? "Filiation :" : "Parents:"}
+                            </span>
+                            <span className="text-gray-800">
+                              {detailsMap["Groom Parents"] || "—"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* BRIDE PANEL */}
+                    <div className="border border-[#6b102f]/25 bg-white/95">
+                      <div className="bg-rose-50/90 border-b border-[#6b102f]/20 px-3.5 py-1.5">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#6b102f]">
+                          {isFr ? "II. L'Épouse (Contractante)" : "II. The Bride"}
+                        </span>
+                      </div>
+                      <div className="p-3.5 space-y-2 text-xs">
+                        <div>
+                          <span className="text-[10px] uppercase text-gray-500 block">
+                            {isFr ? "Nom Complet & N° ID" : "Full Name & ID"}
+                          </span>
+                          <span className="font-bold text-gray-900">
+                            {detailsMap["Bride"] || "—"}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 gap-1.5 text-[11px]">
+                          <div>
+                            <span className="text-gray-500 mr-1">
+                              {isFr ? "Naissance :" : "Birth:"}
+                            </span>
+                            <span className="font-semibold text-gray-800">
+                              {detailsMap["Bride Birth"] || "—"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 mr-1">
+                              {isFr ? "Qualité :" : "Details:"}
+                            </span>
+                            <span className="font-semibold text-gray-800">
+                              {translateNatCombo(detailsMap["Bride Details"])}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 mr-1">
+                              {isFr ? "Domicile :" : "Residence:"}
+                            </span>
+                            <span className="text-gray-800">
+                              {detailsMap["Bride Residence"] || "—"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 mr-1">
+                              {isFr ? "Filiation :" : "Parents:"}
+                            </span>
+                            <span className="text-gray-800">
+                              {detailsMap["Bride Parents"] || "—"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SECTION III: SIGNATURES, QR & SEAL */}
+                  <div className="relative pt-1">
+                    <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+                      <div className="flex-1">{renderDocSignatures()}</div>
+                      <div className="border border-[#6b102f]/20 bg-white p-2.5 flex flex-col items-center justify-center shrink-0">
+                        <RealisticQrMatrix
+                          seed={`MARRIAGE|${issuedNumber || application.applicantName}|${mDatePart}`}
+                          size={58}
+                        />
+                        <span className="font-mono text-[8px] font-bold text-[#6b102f] mt-1">
+                          {issuedNumber || "—"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {bothSigned && (
+                      <div className="flex justify-end mt-2 sm:mt-0 sm:absolute sm:right-24 sm:-top-6">
+                        <DrcOfficialSeal
+                          docNumber={issuedNumber || application.trackingId}
+                          approvedDate={sealDate}
+                          isApproved={bothSigned}
+                          size={88}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative z-10 px-5 py-2 bg-[#6b102f] text-white flex items-center justify-between text-[10px]">
+                <span className="font-mono">
+                  {issuedNumber || "—"} &bull; {sealDate}
+                </span>
+                <span className="uppercase tracking-wider font-semibold text-[#fcd116]">
+                  {bothSigned
+                    ? isFr
+                      ? "Mariage Enregistré & Scellé"
+                      : "Marriage Registered & Sealed"
+                    : isFr
+                    ? "En cours"
+                    : "In progress"}
+                </span>
+              </div>
+            </div>
+          );
+        })()
+      ) : isDeathCertificate ? (
+        /* DEATH CERTIFICATE -> SOLEMN CHARCOAL SLATE CIVIL DEATH ACT (CENTERED) */
+        (() => {
+          const deathCombo = String(detailsMap["Death Date & Place"] || "");
+          const [dDatePart, dPlacePart] = deathCombo.split(" • ");
+          const deathDateTime = `${dDatePart || sealDate}${
+            detailsMap["Death Time"] ? ` • ${detailsMap["Death Time"]}` : ""
+          }`;
+          const [hospitalPart, doctorPart] = String(
+            detailsMap["Hospital / Doctor"] || ""
+          ).split(" • ");
+          const decNat = getLocalizedDetailValue(
+            "Nationality",
+            String(detailsMap["Nationality"] || idProofSummary.nationality || "Congolaise"),
+            isFr
+          );
+          const decGender = getLocalizedDetailValue(
+            "Gender",
+            String(detailsMap["Gender"] || "M"),
+            isFr
+          );
+          const decMarital = getLocalizedDetailValue(
+            "Marital Status",
+            String(detailsMap["Marital Status"] || "—"),
+            isFr
+          );
+          const decBirth = [
+            idProofSummary.birthDate || detailsMap["Birth Date"],
+            idProofSummary.birthPlace || detailsMap["Birth Place"],
+          ]
+            .filter(Boolean)
+            .join(" • ");
+
+          return (
+            <div className="print-clean-page mx-auto relative bg-[#fbfcfd] border-2 border-[#1e293b] overflow-hidden flex flex-col justify-between w-full max-w-3xl">
+              <img
+                src="/logo.png"
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none select-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 object-contain opacity-[0.045] grayscale"
+              />
+
+              <div className="relative z-10 m-1.5 border border-slate-400/60 bg-[#fbfcfd]/90">
+                {/* Solemn Charcoal Slate Header */}
+                <div className="bg-[#1e293b] text-white px-5 py-3 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <img
+                      src="/logo.png"
+                      alt="Emblème RDC"
+                      className="w-10 h-10 object-contain shrink-0 bg-white/95 rounded-full p-0.5"
+                    />
+                    <div className="min-w-0 leading-tight">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#fcd116] truncate">
+                        République Démocratique du Congo
+                      </div>
+                      <div className="text-xs font-extrabold uppercase tracking-wider text-white truncate">
+                        {isFr
+                          ? "État Civil • Registre des Décès"
+                          : "Civil Registry • Death Register"}
+                      </div>
+                      <div className="text-[10px] text-slate-300 truncate">
+                        {application.collectionPoint || application.city}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0 border-l border-slate-600 pl-3">
+                    <div className="text-[9px] uppercase tracking-wider text-slate-300">
+                      {isFr ? "Acte de Décès N°" : "Death Act No."}
+                    </div>
+                    <div className="font-mono text-sm font-extrabold text-[#fcd116]">
+                      {issuedNumber || "—"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5 sm:p-6 space-y-4">
+                  {/* Title & Civil Registrar Proclamation */}
+                  <div className="text-center pb-3 border-b border-slate-300">
+                    <h4 className="font-serif text-lg font-extrabold uppercase tracking-wide text-slate-900">
+                      {isFr
+                        ? "ACTE DE DÉCÈS & CERTIFICAT D'INHUMATION"
+                        : "OFFICIAL DEATH REGISTRATION CERTIFICATE"}
+                    </h4>
+                    <p className="text-[11px] font-serif italic text-gray-600 mt-1">
+                      {isFr
+                        ? "L'Officier de l'État Civil certifie l'inscription régulière au Registre des Décès de la personne défunte identifiée ci-dessous."
+                        : "The Civil Registrar certifies the official entry in the Civil Death Register of the deceased person identified below."}
+                    </p>
+                  </div>
+
+                  {/* SECTION I: DECEASED PERSON DETAILS */}
+                  <div className="border border-slate-300 bg-white/95">
+                    <div className="bg-slate-100 border-b border-slate-300 px-3.5 py-1.5 flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-800">
+                        {isFr ? "I. Identité du Défunt" : "I. Deceased Person Details"}
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-600">
+                        {isFr ? "Délivré le : " : "Issued: "} {sealDate}
+                      </span>
+                    </div>
+
+                    <div className="p-3.5 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2.5 text-xs">
+                      <div className="sm:col-span-2 flex flex-wrap items-baseline justify-between gap-2 pb-1.5 border-b border-gray-100">
+                        <div>
+                          <span className="text-[10px] uppercase tracking-wide text-gray-500 block">
+                            {isFr ? "Nom Complet du Défunt" : "Deceased Full Name"}
+                          </span>
+                          <span className="font-serif text-base font-bold text-gray-900 uppercase">
+                            {application.applicantName}
+                          </span>
+                        </div>
+                        {detailsMap["Deceased ID"] && (
+                          <div className="text-right">
+                            <span className="text-[10px] uppercase text-gray-500 block">
+                              {isFr ? "N° ID / NIN" : "ID / NIN"}
+                            </span>
+                            <span className="font-mono font-semibold text-slate-800">
+                              {detailsMap["Deceased ID"]}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] uppercase text-gray-500 block">
+                          {isFr ? "Naissance (Date & Lieu)" : "Date & Place of Birth"}
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {decBirth || "—"}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] uppercase text-gray-500 block">
+                          {isFr ? "Sexe & État Civil" : "Sex & Marital Status"}
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {decGender} &bull; {decMarital}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] uppercase text-gray-500 block">
+                          {isFr ? "Nationalité & Profession" : "Nationality & Occupation"}
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {decNat}
+                          {detailsMap["Occupation"] ? ` • ${detailsMap["Occupation"]}` : ""}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] uppercase text-gray-500 block">
+                          {isFr ? "Dernier Domicile" : "Last Residence"}
+                        </span>
+                        <span className="font-medium text-gray-800">
+                          {detailsMap["Address"] || idProofSummary.address || "—"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SECTION II: MEDICAL CERTIFICATION OF DEATH */}
+                  <div className="border border-slate-300 bg-white/95">
+                    <div className="bg-slate-100 border-b border-slate-300 px-3.5 py-1.5 flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-800">
+                        {isFr
+                          ? "II. Constatation Médicale du Décès"
+                          : "II. Circumstances & Medical Certification"}
+                      </span>
+                      {detailsMap["Medical Notice"] && (
+                        <span className="font-mono text-[10px] font-semibold text-slate-700">
+                          {detailsMap["Medical Notice"]}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-3.5 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2 text-xs">
+                      <div>
+                        <span className="text-[10px] uppercase text-gray-500 block">
+                          {isFr ? "Date & Heure du Décès" : "Date & Time of Death"}
+                        </span>
+                        <span className="font-bold text-gray-900">
+                          {deathDateTime}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] uppercase text-gray-500 block">
+                          {isFr ? "Lieu du Décès" : "Place of Death"}
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {dPlacePart || application.city}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] uppercase text-gray-500 block">
+                          {isFr ? "Établissement / Centre Médical" : "Hospital / Facility"}
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {hospitalPart || "—"}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] uppercase text-gray-500 block">
+                          {isFr ? "Médecin Certificateur" : "Certifying Physician"}
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {doctorPart || "—"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SECTION III: DECLARANT */}
+                  <div className="border border-slate-300 bg-slate-50/75 px-3.5 py-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-[10px] uppercase text-gray-500 block">
+                        {isFr ? "Déclarant" : "Declarant"}
+                      </span>
+                      <span className="font-bold text-gray-900">
+                        {detailsMap["Declarant"] || "—"}
+                      </span>
+                      {detailsMap["Declarant ID"] && (
+                        <span className="block font-mono text-[10px] text-slate-600">
+                          {detailsMap["Declarant ID"]}
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase text-gray-500 block">
+                        {isFr ? "Domicile du Déclarant" : "Declarant Residence"}
+                      </span>
+                      <span className="text-[11px] text-gray-800">
+                        {detailsMap["Declarant Residence"] || "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* SIGNATURES, QR & SEAL */}
+                  <div className="relative pt-1">
+                    <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+                      <div className="flex-1">{renderDocSignatures()}</div>
+                      <div className="border border-slate-300 bg-white p-2.5 flex flex-col items-center justify-center shrink-0">
+                        <RealisticQrMatrix
+                          seed={`DEATH|${issuedNumber || application.applicantName}|${deathDateTime}`}
+                          size={58}
+                        />
+                        <span className="font-mono text-[8px] font-bold text-slate-800 mt-1">
+                          {issuedNumber || "—"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {bothSigned && (
+                      <div className="flex justify-end mt-2 sm:mt-0 sm:absolute sm:right-24 sm:-top-6">
+                        <DrcOfficialSeal
+                          docNumber={issuedNumber || application.trackingId}
+                          approvedDate={sealDate}
+                          isApproved={bothSigned}
+                          size={88}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative z-10 px-5 py-2 bg-[#1e293b] text-white flex items-center justify-between text-[10px]">
+                <span className="font-mono">
+                  {issuedNumber || "—"} &bull; {sealDate}
+                </span>
+                <span className="uppercase tracking-wider font-semibold text-[#fcd116]">
+                  {bothSigned
+                    ? isFr
+                      ? "Décès Enregistré & Scellé"
+                      : "Death Registered & Sealed"
+                    : isFr
+                    ? "En cours"
+                    : "In progress"}
+                </span>
+              </div>
+            </div>
+          );
+        })()
+      ) : isResidenceCertificate ? (
+        /* RESIDENCE CERTIFICATE -> MUNICIPAL INDIGO & IVORY DOMICILE ATTESTATION (CENTERED) */
+        (() => {
+          const [quarterChiefPart, utilityPart] = String(
+            detailsMap["Quarter Chief / Utility"] || ""
+          ).split(" • ");
+          const resNat = getLocalizedDetailValue(
+            "Nationality",
+            String(detailsMap["Nationality"] || idProofSummary.nationality || "Congolaise"),
+            isFr
+          );
+          const resGender = getLocalizedDetailValue(
+            "Gender",
+            String(detailsMap["Gender"] || "M"),
+            isFr
+          );
+          const resMarital = getLocalizedDetailValue(
+            "Marital Status",
+            String(detailsMap["Marital Status"] || "—"),
+            isFr
+          );
+          const resBirth = [
+            idProofSummary.birthDate || detailsMap["Birth Date"],
+            idProofSummary.birthPlace || detailsMap["Birth Place"],
+          ]
+            .filter(Boolean)
+            .join(" • ");
+          const rawOccupancy = String(detailsMap["Occupancy & Duration"] || "");
+          const occupancyDisplay = isFr
+            ? rawOccupancy || "—"
+            : rawOccupancy
+                .replace(/Locataire avec contrat de bail/gi, "Tenant with Lease Contract")
+                .replace(/Propri[ée]taire/gi, "Homeowner")
+                .replace(/H[ée]berg[ée]\(e\)/gi, "Hosted Resident")
+                .replace(/(\d+)\s*[àa]\s*(\d+)\s*ans/gi, "$1 to $2 years")
+                .replace(/Plus de (\d+)\s*ans/gi, "Over $1 years") || "—";
+          const rawPurpose = String(detailsMap["Purpose"] || "");
+          const purposeDisplay =
+            !isFr && /Carte d'Identit[ée]|Passeport/i.test(rawPurpose)
+              ? "National ID (CNI) or Passport Application"
+              : rawPurpose || "—";
+
+          return (
+            <div className="print-clean-page mx-auto relative bg-[#fefdf9] border-2 border-[#312e81] overflow-hidden flex flex-col justify-between w-full max-w-3xl">
+              <img
+                src="/logo.png"
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none select-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 object-contain opacity-[0.045]"
+              />
+
+              <div className="relative z-10 m-1.5 border border-[#312e81]/30 bg-[#fefdf9]/90">
+                {/* Municipal Indigo Header */}
+                <div className="bg-[#312e81] text-white px-5 py-3 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <img
+                      src="/logo.png"
+                      alt="Emblème RDC"
+                      className="w-10 h-10 object-contain shrink-0 bg-white/95 rounded-full p-0.5"
+                    />
+                    <div className="min-w-0 leading-tight">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#fcd116] truncate">
+                        République Démocratique du Congo
+                      </div>
+                      <div className="text-xs font-extrabold uppercase tracking-wider text-white truncate">
+                        {isFr
+                          ? "Administration Communale • Domicile"
+                          : "Municipal Administration • Residency Office"}
+                      </div>
+                      <div className="text-[10px] text-indigo-100/90 truncate">
+                        {application.collectionPoint || application.city}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0 border-l border-indigo-700/80 pl-3">
+                    <div className="text-[9px] uppercase tracking-wider text-indigo-200">
+                      {isFr ? "Certificat N°" : "Residence No."}
+                    </div>
+                    <div className="font-mono text-sm font-extrabold text-[#fcd116]">
+                      {issuedNumber || "—"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5 sm:p-6 space-y-4">
+                  {/* Title & Municipal Attestation Proclamation */}
+                  <div className="text-center pb-3 border-b border-indigo-900/20">
+                    <h4 className="font-serif text-lg font-extrabold uppercase tracking-wide text-[#312e81]">
+                      {isFr
+                        ? "CERTIFICAT DE RÉSIDENCE ET DE DOMICILE"
+                        : "OFFICIAL CERTIFICATE OF RESIDENCE & DOMICILE"}
+                    </h4>
+                    <p className="text-[11px] font-serif italic text-gray-600 mt-1">
+                      {isFr
+                        ? "Le Bourgmestre et le Chef de Quartier attestent sur la foi du registre parcellaire que le citoyen identifié ci-dessous réside effectivement à l'adresse mentionnée."
+                        : "The Municipal Authority and Quarter Chief certify from the local residential register that the citizen below officially resides at the stated address."}
+                    </p>
+                  </div>
+
+                  {/* SECTION I: RESIDENT IDENTITY */}
+                  <div className="border border-indigo-900/25 bg-white/95">
+                    <div className="bg-indigo-50/90 border-b border-indigo-900/20 px-3.5 py-1.5 flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#312e81]">
+                        {isFr ? "I. Identité du Résident" : "I. Resident Identity"}
+                      </span>
+                      <span className="text-[10px] font-semibold text-indigo-900">
+                        {isFr ? "Délivré le : " : "Issued: "} {sealDate}
+                      </span>
+                    </div>
+
+                    <div className="p-3.5 flex items-start gap-4">
+                      {photoUrl && (
+                        <img
+                          src={photoUrl}
+                          alt={application.applicantName}
+                          className="w-16 h-20 object-cover border border-indigo-900/30 shrink-0 bg-white"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2 text-xs">
+                        <div className="sm:col-span-2 flex flex-wrap items-baseline justify-between gap-2 pb-1.5 border-b border-gray-100">
+                          <div>
+                            <span className="text-[10px] uppercase tracking-wide text-gray-500 block">
+                              {isFr ? "Nom Complet du Résident" : "Resident Full Name"}
+                            </span>
+                            <span className="font-serif text-base font-bold text-gray-900 uppercase">
+                              {application.applicantName}
+                            </span>
+                          </div>
+                          {detailsMap["ID / NIN"] && (
+                            <div className="text-right">
+                              <span className="text-[10px] uppercase text-gray-500 block">
+                                {isFr ? "N° ID / NIN" : "ID / NIN"}
+                              </span>
+                              <span className="font-mono font-semibold text-[#312e81]">
+                                {detailsMap["ID / NIN"]}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] uppercase text-gray-500 block">
+                            {isFr ? "Naissance (Date & Lieu)" : "Date & Place of Birth"}
+                          </span>
+                          <span className="font-semibold text-gray-900">
+                            {resBirth || "—"}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] uppercase text-gray-500 block">
+                            {isFr ? "Sexe & État Civil" : "Sex & Marital Status"}
+                          </span>
+                          <span className="font-semibold text-gray-900">
+                            {resGender} &bull; {resMarital}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] uppercase text-gray-500 block">
+                            {isFr ? "Nationalité" : "Nationality"}
+                          </span>
+                          <span className="font-semibold text-gray-900">
+                            {resNat}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] uppercase text-gray-500 block">
+                            {isFr ? "Profession" : "Occupation"}
+                          </span>
+                          <span className="font-semibold text-gray-900">
+                            {detailsMap["Occupation"] || "—"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SECTION II: OFFICIAL DOMICILE & OCCUPANCY */}
+                  <div className="border border-indigo-900/25 bg-white/95">
+                    <div className="bg-indigo-50/90 border-b border-indigo-900/20 px-3.5 py-1.5">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#312e81]">
+                        {isFr
+                          ? "II. Domicile Officiel & Occupation Parcellaire"
+                          : "II. Official Domicile & Tenancy Verification"}
+                      </span>
+                    </div>
+
+                    <div className="p-3.5 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2 text-xs">
+                      <div>
+                        <span className="text-[10px] uppercase text-gray-500 block">
+                          {isFr ? "Province • Commune • Quartier" : "Province • Commune • Quarter"}
+                        </span>
+                        <span className="font-bold text-gray-900">
+                          {detailsMap["Province / Origin"] || application.city}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] uppercase text-gray-500 block">
+                          {isFr ? "Avenue & Parcelle" : "Street & Parcel"}
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {detailsMap["Avenue / Parcel"] || "—"}
+                        </span>
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <span className="text-[10px] uppercase text-gray-500 block">
+                          {isFr ? "Adresse Complète Vérifiée" : "Verified Full Domicile Address"}
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {detailsMap["Address"] || idProofSummary.address || "—"}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] uppercase text-gray-500 block">
+                          {isFr ? "Statut & Durée d'Occupation" : "Occupancy & Duration"}
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {occupancyDisplay}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] uppercase text-gray-500 block">
+                          {isFr ? "Bailleur / Hébergeur" : "Landlord / Host"}
+                        </span>
+                        <span className="font-semibold text-gray-900">
+                          {detailsMap["Landlord / Host"] || "—"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SECTION III: QUARTER CHIEF & UTILITY CERTIFICATION */}
+                  <div className="border border-indigo-900/20 bg-indigo-50/40 px-3.5 py-2.5 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <span className="text-[10px] uppercase text-gray-500 block">
+                        {isFr ? "Chef de Quartier" : "Quarter Chief"}
+                      </span>
+                      <span className="font-bold text-gray-900">
+                        {quarterChiefPart || "—"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase text-gray-500 block">
+                        {isFr ? "Réf. SNEL / REGIDESO" : "Utility Meter Ref."}
+                      </span>
+                      <span className="font-mono font-semibold text-[#312e81]">
+                        {utilityPart || "—"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase text-gray-500 block">
+                        {isFr ? "Motif Légal" : "Declared Purpose"}
+                      </span>
+                      <span className="font-medium text-gray-800">
+                        {purposeDisplay}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* SIGNATURES, QR & SEAL */}
+                  <div className="relative pt-1">
+                    <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+                      <div className="flex-1">{renderDocSignatures()}</div>
+                      <div className="border border-indigo-900/20 bg-white p-2.5 flex flex-col items-center justify-center shrink-0">
+                        <RealisticQrMatrix
+                          seed={`RES|${issuedNumber || application.applicantName}|${utilityPart}`}
+                          size={58}
+                        />
+                        <span className="font-mono text-[8px] font-bold text-[#312e81] mt-1">
+                          {issuedNumber || "—"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {bothSigned && (
+                      <div className="flex justify-end mt-2 sm:mt-0 sm:absolute sm:right-24 sm:-top-6">
+                        <DrcOfficialSeal
+                          docNumber={issuedNumber || application.trackingId}
+                          approvedDate={sealDate}
+                          isApproved={bothSigned}
+                          size={88}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative z-10 px-5 py-2 bg-[#312e81] text-white flex items-center justify-between text-[10px]">
+                <span className="font-mono">
+                  {issuedNumber || "—"} &bull; {sealDate}
+                </span>
+                <span className="uppercase tracking-wider font-semibold text-[#fcd116]">
+                  {bothSigned
+                    ? isFr
+                      ? "Domicile Certifié & Scellé"
+                      : "Residence Certified & Sealed"
+                    : isFr
+                    ? "En cours"
+                    : "In progress"}
+                </span>
+              </div>
+            </div>
+          );
+        })()
       ) : (
-        /* ALL OTHER 7 SERVICES -> SERVICE-SPECIFIC OFFICIAL DOCUMENT ONLY (NO EXTRA PVC ID CARD) */
-        <div className="print-clean-page relative bg-[#fcfbf7] border-2 border-[#0f295c]/80 overflow-hidden flex flex-col justify-between w-full max-w-3xl">
+        /* ALL OTHER SERVICES -> SERVICE-SPECIFIC OFFICIAL DOCUMENT ONLY (CENTERED) */
+        <div className="print-clean-page mx-auto relative bg-[#fcfbf7] border-2 border-[#0f295c]/80 overflow-hidden flex flex-col justify-between w-full max-w-3xl">
           <img
             src="/logo.png"
             alt=""

@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ApplicationStatus,
-  Language,
   OfficerApplicationRecord,
   OfficerAuditEntry,
   OfficerProfile,
   OfficerRoleTier,
   SupportingDocumentItem,
 } from "@/types";
+import { useLanguage } from "@/components/LanguageProvider";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SignaturePad } from "@/components/officer/SignaturePad";
@@ -104,7 +104,7 @@ function getDefaultQueueForTier(tier: OfficerRoleTier): QueueFilter {
 
 function OfficerPortalContent() {
   const router = useRouter();
-  const [language, setLanguage] = useState<Language>("fr");
+  const { language, setLanguage } = useLanguage();
   const isFr = language === "fr";
 
   const [loadingSession, setLoadingSession] = useState(true);

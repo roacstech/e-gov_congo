@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const publicLookup = searchParams.get("publicLookup") === "1";
 
   try {
-    // Public single tracking/document lookup for citizen TrackingSection & VerificationSection
+    // Public single tracking lookup for citizen TrackingSection
     if (trackingId && publicLookup) {
       const found = await findApplicationByTrackingOrDocNumber(trackingId);
       if (!found) {

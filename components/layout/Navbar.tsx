@@ -459,11 +459,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     type="button"
                     onClick={() => {
                       setVerifyDropdownOpen(false);
-                      if (pathname === "/") {
-                        onTabChange("verify");
-                      } else {
-                        router.push("/?tab=verify");
-                      }
+                      router.push("/verify");
                     }}
                     className="w-full text-left py-2.5 px-3 rounded-xl transition-colors cursor-pointer flex items-center gap-3 text-slate-800 hover:text-blue-600 hover:bg-blue-50/70"
                   >
@@ -574,11 +570,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <button
               onClick={() => {
-                if (pathname === "/") {
-                  onTabChange("verify");
-                } else {
-                  router.push("/?tab=verify");
-                }
+                router.push("/verify");
                 setMobileMenuOpen(false);
               }}
               className="text-left py-2 font-semibold tracking-wide uppercase text-sm"

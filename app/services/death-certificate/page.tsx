@@ -7,6 +7,7 @@ import { Language, CitizenApplication } from "@/types";
 import { SERVICES_DATA } from "@/data/services";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { useLanguage } from "@/components/LanguageProvider";
 import { AnimatedCheckmark } from "@/components/AnimatedCheckmark";
 import { readSupportingFile, UploadedFilePayload } from "@/lib/file-upload";
 import {
@@ -361,7 +362,7 @@ function DatePickerField({
 
 function DeathCertificateContent() {
   const router = useRouter();
-  const [language, setLanguage] = useState<Language>("fr");
+  const { language, setLanguage } = useLanguage();
   const isFr = language === "fr";
 
   // STEP PROGRESS STATE (1: Identity & Circumstances, 2: Documents, 3: Review)

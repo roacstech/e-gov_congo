@@ -694,32 +694,6 @@ function TrackApplicationContent() {
                   </div>
                 </div>
               )}
-
-              {/* AUDIT TRAIL LOGS */}
-              {auditLogs.length > 0 && (
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700">
-                    <Clock className="w-4 h-4 text-slate-400" />
-                    <span>{isFr ? "Journal d'intégrité & horodatage administratif" : "Administrative Audit Trail"}</span>
-                  </div>
-
-                  <div className="divide-y divide-slate-100 text-xs">
-                    {auditLogs.map((log) => (
-                      <div key={log.id} className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                        <div>
-                          <strong className="text-slate-800">{log.officerName}</strong>
-                          <span className="text-slate-500"> ({log.officerRole}) : </span>
-                          <span className="text-blue-700 font-medium">{log.action}</span>
-                          {log.notes && <p className="text-slate-500 text-[11px] mt-0.5">{log.notes}</p>}
-                        </div>
-                        <div className="text-[11px] text-slate-400 font-mono shrink-0">
-                          {new Date(log.createdAt).toLocaleString(isFr ? "fr-FR" : "en-US")}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 

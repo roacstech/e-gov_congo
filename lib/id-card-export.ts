@@ -170,6 +170,18 @@ export async function downloadOfficialCardOrDocumentPng(
     application.serviceId === "death-certificate" ||
     (isFullApp(application) && application.tableName === "death_applications");
 
+  const isDrivingLicense =
+    application.serviceId === "permis-conduire" ||
+    application.serviceId === "driving-license" ||
+    (isFullApp(application) &&
+      application.tableName === "driving_license_applications");
+
+  const isResidenceCertificate =
+    application.serviceId === "certificat-residence" ||
+    application.serviceId === "residence-certificate" ||
+    (isFullApp(application) &&
+      application.tableName === "residence_applications");
+
   const localizedTitle = getLocalizedServiceTitle(
     application.serviceId,
     application.serviceTitle,
@@ -1037,6 +1049,388 @@ export async function downloadOfficialCardOrDocumentPng(
       56,
       canvas.height - 44
     );
+  } else if (isDrivingLicense) {
+    // Two-sided ISO CR80 PVC Smart Driving License PNG (Front & Back side-by-side)
+    canvas.width = 1660;
+    canvas.height = 560;
+    ctx.fillStyle = "#f1f5f9";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const cardW = 780;
+    const cardH = 492;
+    const frontX = 35;
+    const backX = frontX + cardW + 30;
+    const cardY = 34;
+    const details = isFullApp(application) ? application.details : {};
+    const [dlCatRaw, dlBloodRaw] = String(details["License Category"] || "B").split(" • Blood: ");
+    const dlCat = (dlCatRaw || "B").trim().toUpperCase();
+    const dlBlood = (dlBloodRaw || "O+").trim();
+    const dlExpObj = new Date();
+    dlExpObj.setFullYear(dlExpObj.getFullYear() + 5);
+    const dlExpStr = dlExpObj
+      .toLocaleDateString(isFr ? "fr-FR" : "en-US", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+      .toUpperCase();
+
+    // --- FRONT SIDE ---
+    ctx.save();
+    drawRoundedRect(ctx, frontX, cardY, cardW, cardH, 22);
+    ctx.clip();
+
+    const gradDL = ctx.createLinearGradient(frontX, cardY, frontX + cardW, cardY + cardH);
+    gradDL.addColorStop(0, "#fdf2f8");
+    gradDL.addColorStop(0.55, "#fffdf7");
+    gradDL.addColorStop(1, "#e0f2fe");
+    ctx.fillStyle = gradDL;
+    ctx.fillRect(frontX, cardY, cardW, cardH);
+    drawGuillocheBackground(ctx, frontX, cardY, cardW, cardH);
+
+    if (emblemImg) {
+      ctx.save();
+      ctx.globalAlpha = 0.085;
+      ctx.drawImage(emblemImg, frontX + 320, cardY + 140, 230, 230);
+      ctx.restore();
+      ctx.drawImage(emblemImg, frontX + 26, cardY + 20, 56, 56);
+    }
+
+    ctx.fillStyle = "#881337";
+    ctx.font = "bold 16px Arial, sans-serif";
+    ctx.fillText("REPUBLIQUE DEMOCRATIQUE DU CONGO", frontX + 94, cardY + 40);
+    drawFlagBar(ctx, frontX + 94, cardY + 50, 48, 5);
+    ctx.fillStyle = "#0f172a";
+    ctx.font = "bold 18px Arial, sans-serif";
+    ctx.fillText(
+      isFr ? "PERMIS DE CONDUIRE" : "DRIVING LICENCE",
+      frontX + 150,
+      cardY + 59
+    );
+
+    // Top-right category pill
+    ctx.fillStyle = "#881337";
+    drawRoundedRect(ctx, frontX + cardW - 92, cardY + 24, 62, 34, 6);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 18px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(dlCat, frontX + cardW - 61, cardY + 47);
+    ctx.textAlign = "left";
+
+    // Portrait frame + EMV chip + Blood group
+    const pX = frontX + 28;
+    const pY = cardY + 96;
+    ctx.fillStyle = "#e2e8f0";
+    ctx.fillRect(pX, pY, 154, 196);
+    ctx.strokeStyle = "#881337";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(pX, pY, 154, 196);
+    if (photoImg) {
+      ctx.drawImage(photoImg, pX + 1, pY + 1, 152, 194);
+    }
+
+    ctx.fillStyle = "#eab308";
+    drawRoundedRect(ctx, pX, pY + 214, 58, 42, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#854d0e";
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+    ctx.fillStyle = "#881337";
+    ctx.font = "bold 16px monospace";
+    ctx.fillText(dlBlood, pX + 74, pY + 242);
+
+    const fX = pX + 184;
+    const drawDlField = (lbl: string, val: string, fy: number, hl = false) => {
+      ctx.fillStyle = "#881337";
+      ctx.font = "bold 11px Arial, sans-serif";
+      ctx.fillText(lbl.toUpperCase(), fX, fy);
+      ctx.fillStyle = hl ? "#0c3b7a" : "#0f172a";
+      ctx.font = hl ? "bold 21px monospace" : "bold 17px Arial, sans-serif";
+      ctx.fillText(val.slice(0, 40), fX, fy + 24);
+    };
+    drawDlField(isFr ? "5. N° du Permis" : "5. Licence No.", issuedNumber, cardY + 114, true);
+    drawDlField(isFr ? "1-3. Nom & Prénoms" : "1-3. Full Name", application.applicantName.toUpperCase(), cardY + 178);
+    drawDlField(
+      isFr ? "3. Naissance • 4d. NIN" : "3. Birth • 4d. NIN",
+      `${idSummary?.birthDate || "—"} • ${details["ID / NIN"] || "—"}`,
+      cardY + 242
+    );
+    drawDlField(
+      isFr ? "4a. Délivré • 4b. Validité" : "4a. Issued • 4b. Expires",
+      `${sealDate}  ->  ${dlExpStr}`,
+      cardY + 306
+    );
+    drawDlField(
+      isFr ? "8. Adresse • 9. Catégorie" : "8. Address • 9. Category",
+      `${details["Address"] || application.city} (CAT ${dlCat})`,
+      cardY + 370
+    );
+
+    ctx.fillStyle = "#881337";
+    ctx.font = "bold 12px monospace";
+    ctx.fillText("CNPR  •  MIN. TRANSPORTS R.D.C.", frontX + 28, cardY + cardH - 22);
+    ctx.textAlign = "right";
+    ctx.fillText(issuedNumber, frontX + cardW - 28, cardY + cardH - 22);
+    ctx.textAlign = "left";
+    ctx.restore();
+
+    ctx.strokeStyle = "#fda4af";
+    ctx.lineWidth = 2;
+    drawRoundedRect(ctx, frontX, cardY, cardW, cardH, 22);
+    ctx.stroke();
+
+    // --- BACK SIDE (CATEGORIES TABLE & SIGNATURES) ---
+    ctx.save();
+    drawRoundedRect(ctx, backX, cardY, cardW, cardH, 22);
+    ctx.clip();
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillRect(backX, cardY, cardW, cardH);
+    drawGuillocheBackground(ctx, backX, cardY, cardW, cardH);
+
+    // Matte magnetic stripe
+    ctx.fillStyle = "#090d14";
+    ctx.fillRect(backX, cardY + 24, cardW, 44);
+
+    // Categories grid box
+    const tX = backX + 28;
+    const tY = cardY + 86;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(tX, tY, cardW - 56, 174);
+    ctx.strokeStyle = "#cbd5e1";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(tX, tY, cardW - 56, 174);
+    ctx.fillStyle = "#fff1f2";
+    ctx.fillRect(tX, tY, cardW - 56, 30);
+    ctx.fillStyle = "#881337";
+    ctx.font = "bold 12px Arial, sans-serif";
+    ctx.fillText("9. CAT", tX + 14, tY + 20);
+    ctx.fillText(isFr ? "CLASSE VEHICULE" : "VEHICLE CLASS", tX + 120, tY + 20);
+    ctx.fillText(isFr ? "10. DELIVRE" : "10. ISSUED", tX + 360, tY + 20);
+    ctx.fillText(isFr ? "11. EXPIRE" : "11. EXPIRES", tX + 530, tY + 20);
+
+    const catList = [
+      ["A", isFr ? "Moto / Cyclomoteur" : "Motorcycle"],
+      ["B", isFr ? "Auto ≤ 3.5t" : "Light Vehicle ≤ 3.5t"],
+      ["C", isFr ? "Poids lourd" : "Heavy Truck"],
+      ["D", isFr ? "Transport commun" : "Passenger Bus"],
+      ["E", isFr ? "Remorque" : "Trailer"],
+    ];
+    let cy = tY + 52;
+    for (const [code, label] of catList) {
+      const act = dlCat.includes(code);
+      ctx.fillStyle = act ? "#0f172a" : "#94a3b8";
+      ctx.font = act ? "bold 13px Arial, sans-serif" : "12px Arial, sans-serif";
+      ctx.fillText(code, tX + 18, cy);
+      ctx.fillText(label, tX + 120, cy);
+      ctx.fillText(act ? sealDate : "—", tX + 360, cy);
+      ctx.fillText(act ? dlExpStr : "—", tX + 530, cy);
+      cy += 27;
+    }
+
+    const sigY = cardY + 286;
+    ctx.fillStyle = "#fffef7";
+    ctx.fillRect(backX + 28, sigY, cardW - 56, 126);
+    ctx.strokeStyle = "#cbd5e1";
+    ctx.strokeRect(backX + 28, sigY, cardW - 56, 126);
+    if (verSigImg) ctx.drawImage(verSigImg, backX + 46, sigY + 12, 180, 66);
+    if (appSigImg) ctx.drawImage(appSigImg, backX + 350, sigY + 12, 180, 66);
+    ctx.fillStyle = "#334155";
+    ctx.font = "bold 12px Arial, sans-serif";
+    ctx.fillText(`${isFr ? "Vérif." : "Verifier"}: ${wf.verificationOfficerName || "—"}`, backX + 46, sigY + 106);
+    ctx.fillText(`${isFr ? "Approb." : "Approver"}: ${wf.approverOfficerName || "—"}`, backX + 350, sigY + 106);
+
+    if (wf.verificationSignature && wf.approverSignature) {
+      drawSealOnCanvas(ctx, backX + cardW - 92, sigY + 46, 56, issuedNumber, sealDate);
+    }
+
+    ctx.fillStyle = "#881337";
+    ctx.font = "bold 12px monospace";
+    ctx.fillText(
+      `4c. ${(application.collectionPoint || application.city).toUpperCase().slice(0, 48)}`,
+      backX + 28,
+      cardY + cardH - 22
+    );
+    ctx.textAlign = "right";
+    ctx.fillText(issuedNumber, backX + cardW - 28, cardY + cardH - 22);
+    ctx.textAlign = "left";
+    ctx.restore();
+
+    ctx.strokeStyle = "#fda4af";
+    ctx.lineWidth = 2;
+    drawRoundedRect(ctx, backX, cardY, cardW, cardH, 22);
+    ctx.stroke();
+  } else if (isResidenceCertificate) {
+    // Municipal Indigo & Ivory Residence Certificate PNG
+    const dMap = isFullApp(application) ? application.details : {};
+    const [qChief, qUtil] = String(dMap["Quarter Chief / Utility"] || "").split(" • ");
+    canvas.width = 1100;
+    canvas.height = 1040;
+    ctx.fillStyle = "#fefdf9";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = "#312e81";
+    ctx.lineWidth = 5;
+    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+    ctx.strokeStyle = "#a5b4fc";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
+
+    ctx.fillStyle = "#312e81";
+    ctx.fillRect(30, 30, canvas.width - 60, 128);
+    if (emblemImg) {
+      ctx.drawImage(emblemImg, 54, 48, 90, 90);
+      ctx.save();
+      ctx.globalAlpha = 0.05;
+      ctx.drawImage(emblemImg, 390, 360, 320, 320);
+      ctx.restore();
+    }
+
+    ctx.fillStyle = "#fcd116";
+    ctx.font = "bold 16px Arial, sans-serif";
+    ctx.fillText("REPUBLIQUE DEMOCRATIQUE DU CONGO", 164, 72);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 20px Arial, sans-serif";
+    ctx.fillText(
+      isFr ? "ADMINISTRATION COMMUNALE • DOMICILE" : "MUNICIPAL ADMINISTRATION • RESIDENCY OFFICE",
+      164,
+      102
+    );
+    ctx.fillStyle = "#c7d2fe";
+    ctx.font = "15px Arial, sans-serif";
+    ctx.fillText(application.collectionPoint || application.city, 164, 130);
+
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#c7d2fe";
+    ctx.font = "bold 12px Arial, sans-serif";
+    ctx.fillText(isFr ? "CERTIFICAT N°" : "RESIDENCE NO.", canvas.width - 54, 76);
+    ctx.fillStyle = "#fcd116";
+    ctx.font = "bold 22px monospace";
+    ctx.fillText(issuedNumber, canvas.width - 54, 108);
+    ctx.textAlign = "left";
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#312e81";
+    ctx.font = "bold 25px Georgia, serif";
+    ctx.fillText(
+      isFr ? "CERTIFICAT DE RESIDENCE ET DE DOMICILE" : "OFFICIAL CERTIFICATE OF RESIDENCE & DOMICILE",
+      canvas.width / 2,
+      206
+    );
+    ctx.textAlign = "left";
+
+    const drawResCell = (lbl: string, val: string, xPos: number, yPos: number) => {
+      ctx.fillStyle = "#64748b";
+      ctx.font = "bold 11px Arial, sans-serif";
+      ctx.fillText(lbl.toUpperCase(), xPos, yPos);
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "bold 15px Arial, sans-serif";
+      ctx.fillText(val.slice(0, 48), xPos, yPos + 20);
+    };
+
+    // Section I: Resident Identity
+    ctx.fillStyle = "#eef2ff";
+    ctx.fillRect(58, 240, canvas.width - 116, 36);
+    ctx.strokeStyle = "#312e81";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(58, 240, canvas.width - 116, 185);
+    ctx.fillStyle = "#312e81";
+    ctx.font = "bold 14px Arial, sans-serif";
+    ctx.fillText(isFr ? "I. IDENTITE DU RESIDENT" : "I. RESIDENT IDENTITY", 76, 264);
+
+    drawResCell(isFr ? "Nom Complet" : "Resident Full Name", application.applicantName.toUpperCase(), 76, 304);
+    drawResCell("ID / NIN", String(dMap["ID / NIN"] || "—"), 620, 304);
+    drawResCell(
+      isFr ? "Naissance" : "Birth Date & Place",
+      [idSummary?.birthDate || dMap["Birth Date"], idSummary?.birthPlace || dMap["Birth Place"]].filter(Boolean).join(" • ") || "—",
+      76,
+      362
+    );
+    drawResCell(
+      isFr ? "Nationalité • Profession" : "Nationality • Occupation",
+      `${dMap["Nationality"] || "Congolaise"} • ${dMap["Occupation"] || "—"}`,
+      620,
+      362
+    );
+
+    // Section II: Domicile & Quarter Chief
+    ctx.fillStyle = "#eef2ff";
+    ctx.fillRect(58, 448, canvas.width - 116, 36);
+    ctx.strokeRect(58, 448, canvas.width - 116, 250);
+    ctx.fillStyle = "#312e81";
+    ctx.font = "bold 14px Arial, sans-serif";
+    ctx.fillText(
+      isFr ? "II. DOMICILE OFFICIEL & CHEF DE QUARTIER" : "II. OFFICIAL DOMICILE & QUARTER CHIEF",
+      76,
+      472
+    );
+    drawResCell(
+      isFr ? "Commune & Quartier" : "Commune & Quarter",
+      String(dMap["Province / Origin"] || application.city),
+      76,
+      514
+    );
+    drawResCell(
+      isFr ? "Avenue & Parcelle" : "Street & Parcel",
+      String(dMap["Avenue / Parcel"] || "—"),
+      620,
+      514
+    );
+    drawResCell(
+      isFr ? "Adresse Complète" : "Verified Full Domicile",
+      String(dMap["Address"] || idSummary?.address || "—"),
+      76,
+      572
+    );
+    drawResCell(
+      isFr ? "Statut & Durée" : "Occupancy & Duration",
+      String(dMap["Occupancy & Duration"] || "—"),
+      620,
+      572
+    );
+    drawResCell(
+      isFr ? "Chef de Quartier" : "Quarter Chief",
+      qChief || "—",
+      76,
+      632
+    );
+    drawResCell(
+      isFr ? "Compteur SNEL / REGIDESO" : "Utility Meter Ref.",
+      qUtil || "—",
+      620,
+      632
+    );
+
+    const rSigY = 732;
+    const drawResSig = (sx: number, title: string, img: HTMLImageElement | null, name: string) => {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(sx, rSigY, 360, 168);
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(sx, rSigY, 360, 168);
+      ctx.fillStyle = "#312e81";
+      ctx.font = "bold 14px Arial, sans-serif";
+      ctx.fillText(title.toUpperCase(), sx + 16, rSigY + 26);
+      if (img) ctx.drawImage(img, sx + 24, rSigY + 40, 230, 78);
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "bold 15px Arial, sans-serif";
+      ctx.fillText(name || "—", sx + 16, rSigY + 148);
+    };
+    drawResSig(58, isFr ? "Vérification" : "Verification", verSigImg, wf.verificationOfficerName || "");
+    drawResSig(448, isFr ? "Approbation" : "Approver", appSigImg, wf.approverOfficerName || "");
+    if (wf.verificationSignature && wf.approverSignature) {
+      drawSealOnCanvas(ctx, 945, rSigY + 84, 82, issuedNumber, sealDate);
+    }
+
+    ctx.fillStyle = "#312e81";
+    ctx.fillRect(30, canvas.height - 68, canvas.width - 60, 38);
+    ctx.fillStyle = "#fcd116";
+    ctx.font = "bold 14px monospace";
+    ctx.fillText(
+      `REPUBLIQUE DEMOCRATIQUE DU CONGO  •  DOMICILE  •  ${issuedNumber}  •  ${sealDate}`,
+      56,
+      canvas.height - 44
+    );
   } else {
     // Official Certificate PNG for all non-CNI services (including full service-specific details)
     const detailsObj = isFullApp(application) ? application.details : {};
@@ -1202,6 +1596,10 @@ export async function downloadOfficialCardOrDocumentPng(
       ? "Marriage-Certificate"
       : isDeathCertificate
       ? "Death-Certificate"
+      : isDrivingLicense
+      ? "Driving-License"
+      : isResidenceCertificate
+      ? "Residence-Certificate"
       : "Official-Document"
   }-${issuedNumber}.png`;
   document.body.appendChild(a);

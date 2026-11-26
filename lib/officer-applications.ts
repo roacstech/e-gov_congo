@@ -528,6 +528,12 @@ function normalizeApplicationRow(
     "Quarter Chief / Utility": row.quarter_chief_name || row.utility_meter_ref
       ? [row.quarter_chief_name, row.utility_meter_ref].filter(Boolean).join(" • ")
       : null,
+    "Avenue / Parcel": row.avenue_parcel ? String(row.avenue_parcel) : null,
+    "Occupancy & Duration": row.occupancy_status || row.residence_duration
+      ? [row.occupancy_status, row.residence_duration].filter(Boolean).join(" • ")
+      : null,
+    "Landlord / Host": row.landlord_host_name ? String(row.landlord_host_name) : null,
+    "Purpose": row.purpose ? String(row.purpose) : null,
     "Collection Hub": collectionPoint,
   };
 

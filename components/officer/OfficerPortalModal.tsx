@@ -1,9 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { CitizenApplication, Language } from "../../types";
-import { X, Shield, ExternalLink } from "lucide-react";
+import { CitizenApplication, Language, ServiceOfficer } from "../../types";
+import {
+  X,
+  Shield,
+  ExternalLink,
+  Key,
+  Lock,
+  AlertCircle,
+  User,
+  RefreshCw,
+  Sparkles,
+  LogOut,
+} from "lucide-react";
 
 interface OfficerPortalModalProps {
   isOpen: boolean;

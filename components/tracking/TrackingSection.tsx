@@ -15,6 +15,7 @@ import {
   Printer,
   Loader2,
   ExternalLink,
+  Clock,
 } from "lucide-react";
 
 interface TrackingSectionProps {
@@ -364,22 +365,52 @@ export const TrackingSection: React.FC<TrackingSectionProps> = ({
             </button>
           </div>
 
-          {/* Live Signed Document & ID Proof when workflow signatures exist */}
-          {activeResult.workflow &&
-            (activeResult.workflow.verificationSignature ||
-              activeResult.workflow.approverSignature ||
-              activeResult.status === "verified" ||
-              activeResult.status === "approved" ||
-              activeResult.status === "ready") && (
-              <div className="pt-4 border-t border-slate-200">
-                <SignedDocumentAndIdProofViewer
-                  application={activeResult}
-                  language={language}
-                  defaultMode="both"
-                  showPrintButton={false}
-                />
+          {/* Live Signed Document & ID Proof ONLY when all processes are completed (status === 'ready') */}
+          {activeResult.status === "ready" ? (
+            <div className="pt-4 border-t border-slate-200 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-emerald-800 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>{isFr ? "Document officiel délivré & disponible" : "Official document issued & available"}</span>
+                </span>
+                <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                  {isFr ? "Toutes les étapes validées" : "All Processes Completed"}
+                </span>
               </div>
-            )}
+              <SignedDocumentAndIdProofViewer
+                application={activeResult}
+                language={language}
+                defaultMode="both"
+                showPrintButton={true}
+              />
+            </div>
+          ) : (
+            <div className="pt-4 border-t border-slate-200">
+              <div className="bg-amber-50/70 border border-amber-200/90 rounded-xl p-5 text-center space-y-2">
+                <div className="w-8 h-8 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-700 mx-auto">
+                  <Clock className="w-4 h-4 text-amber-600" />
+                </div>
+                <p className="text-xs font-bold text-slate-800">
+                  {isFr
+                    ? "Document officiel en cours de traitement administratif"
+                    : "Official document in administrative processing"}
+                </p>
+                <p className="text-[11px] text-slate-600 max-w-md mx-auto leading-relaxed">
+                  {isFr
+                    ? "Le document officiel et son impression seront débloqués uniquement lorsque le Chef de Service aura validé l'étape finale de délivrance (Étape 4 : Prêt & Délivrance)."
+                    : "The official document and printing will only be unlocked once the Chief of Service validates the final delivery step (Step 4: Issued & Ready for Collection)."}
+                </p>
+                <div className="pt-1 flex items-center justify-center gap-1.5 text-[11px] text-amber-800 font-medium">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  <span>
+                    {isFr
+                      ? "Statut actuel : En cours de validation administrative"
+                      : "Current status: Administrative validation in progress"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       ) : hasSearched ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-3">

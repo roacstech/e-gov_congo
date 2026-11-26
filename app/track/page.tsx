@@ -640,38 +640,60 @@ function TrackApplicationContent() {
                 </div>
               </div>
 
-              {/* LIVE OFFICIAL SIGNED DOCUMENT & ID PROOF VIEWER */}
-              {activeApplication.workflow &&
-                (activeApplication.workflow.verificationSignature ||
-                  activeApplication.workflow.approverSignature ||
-                  activeApplication.status === "verified" ||
-                  activeApplication.status === "approved" ||
-                  activeApplication.status === "ready") && (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
-                        <Award className="w-4 h-4 text-blue-600" />
-                        <span>
-                          {isFr
-                            ? "Visualisation du Document Officiel & Pièce d'Identité Validée"
-                            : "Official Sealed Document & Verified Identity Proof"}
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full font-medium">
-                        {isFr ? "Signatures Électroniques Officielles RDC" : "Official DRC Digital Signatures"}
+              {/* LIVE OFFICIAL SIGNED DOCUMENT & ID PROOF VIEWER (ONLY WHEN ALL PROCESSES COMPLETED) */}
+              {activeApplication.status === "ready" ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                      <Award className="w-4 h-4 text-emerald-600" />
+                      <span>
+                        {isFr
+                          ? "Visualisation du Document Officiel Délivré & Scellé"
+                          : "Official Issued & Sealed Document"}
                       </span>
                     </div>
-
-                    <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 shadow-sm">
-                      <SignedDocumentAndIdProofViewer
-                        application={activeApplication}
-                        language={language}
-                        defaultMode="both"
-                        showPrintButton={true}
-                      />
-                    </div>
+                    <span className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>{isFr ? "Toutes les étapes validées" : "All Processes Completed"}</span>
+                    </span>
                   </div>
-                )}
+
+                  <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 shadow-sm">
+                    <SignedDocumentAndIdProofViewer
+                      application={activeApplication}
+                      language={language}
+                      defaultMode="both"
+                      showPrintButton={true}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-amber-50/70 border border-amber-200/90 rounded-2xl p-6 md:p-8 text-center space-y-3 shadow-xs">
+                  <div className="w-12 h-12 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-700 mx-auto">
+                    <Clock className="w-6 h-6 text-amber-600" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm md:text-base font-bold text-slate-900">
+                      {isFr
+                        ? "Document officiel en cours de traitement administratif"
+                        : "Official Document Under Administrative Processing"}
+                    </h4>
+                    <p className="text-xs text-slate-600 max-w-lg mx-auto leading-relaxed">
+                      {isFr
+                        ? "La visualisation, le téléchargement et l'impression du document officiel définitif ne sont accessibles qu'une fois l'ensemble des étapes administratives validées et scellées par le Chef de Service (Étape 4 : Prêt & Délivrance)."
+                        : "Viewing, downloading, and printing the final official document will only be accessible once all administrative workflow stages are fully completed and sealed by the Chief of Service (Step 4: Issued & Ready for Collection)."}
+                    </p>
+                  </div>
+                  <div className="pt-1 flex items-center justify-center gap-2 text-xs text-amber-800 font-medium">
+                    <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                    <span>
+                      {isFr
+                        ? "Statut actuel : En cours de validation administrative (Étape 4 en attente)"
+                        : "Current status: In administrative workflow (Step 4 pending)"}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* AUDIT TRAIL LOGS */}
               {auditLogs.length > 0 && (
